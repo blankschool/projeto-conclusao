@@ -11,6 +11,7 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [studentInfo, setStudentInfo] = useState<{ name: string; email: string; phone: string } | null>(null);
 
   const handleSubmit = async () => {
     if (!email || !email.includes("@")) {
@@ -25,16 +26,24 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
       );
       const csv = await res.text();
       const rows = csv.split("\n").slice(1);
-      const emails = rows
-        .map((row) => {
-          const cols = row.split(",");
-          return cols[2]?.trim().toLowerCase().replace(/"/g, "");
-        })
-        .filter(Boolean);
       const inputEmail = email.trim().toLowerCase();
-      if (emails.includes(inputEmail)) {
+      let found = false;
+      for (const row of rows) {
+        const cols = row.split(",");
+        const rowEmail = cols[2]?.trim().toLowerCase().replace(/"/g, "");
+        if (rowEmail === inputEmail) {
+          found = true;
+          setStudentInfo({
+            name: cols[1]?.trim().replace(/"/g, "") || "",
+            email: cols[2]?.trim().replace(/"/g, "") || "",
+            phone: cols[3]?.trim().replace(/"/g, "") || "",
+          });
+          break;
+        }
+      }
+      if (found) {
         setStatus("success");
-        setTimeout(() => onAuth(email), 800);
+        setTimeout(() => onAuth(email), 1500);
       } else {
         setStatus("error");
         setErrorMsg("E-mail não encontrado na base de alunos.");
@@ -80,9 +89,15 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
         </div>
       )}
 
-      {status === "success" && (
-        <div className="w-full px-4 py-3 rounded-lg bg-primary/8 border border-primary/15 text-[13px] text-foreground mb-4">
-          ✓ E-mail verificado. Redirecionando...
+      {status === "success" && studentInfo && (
+        <div className="w-full px-5 py-4 rounded-xl bg-primary/8 border border-primary/15 mb-4 space-y-2">
+          <p className="text-[15px] font-medium text-foreground">Bem-vindo(a)!</p>
+          <div className="text-[13px] text-muted-foreground space-y-1">
+            <p><span className="text-foreground/70">Nome:</span> {studentInfo.name}</p>
+            <p><span className="text-foreground/70">E-mail:</span> {studentInfo.email}</p>
+            <p><span className="text-foreground/70">Telefone:</span> {studentInfo.phone}</p>
+          </div>
+          <p className="text-[12px] text-muted-foreground pt-1">Redirecionando...</p>
         </div>
       )}
 
