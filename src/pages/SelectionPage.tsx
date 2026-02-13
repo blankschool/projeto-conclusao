@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ENTREPRENEURS } from "@/data/entrepreneurs";
+import { useEntrepreneurs, useCreateSelection } from "@/hooks/useEntrepreneurs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { AlertTriangle, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface SelectionPageProps {
   userEmail: string;
@@ -17,16 +18,37 @@ interface SelectionPageProps {
 }
 
 export default function SelectionPage({ userEmail, onBack }: SelectionPageProps) {
+  const { data: entrepreneurs = [], isLoading } = useEntrepreneurs();
+  const createSelection = useCreateSelection();
   const [popup, setPopup] = useState<number | null>(null);
   const [step, setStep] = useState<"info" | "preconfirm" | "confirmed">("info");
+  const [confirmedEnt, setConfirmedEnt] = useState<{ name: string; company: string } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleClosePopup = () => { setPopup(null); setStep("info"); };
   const handlePreConfirm = () => setStep("preconfirm");
-  const handleConfirm = () => setStep("confirmed");
+
+  const handleConfirm = async () => {
+    if (popup === null) return;
+    const ent = entrepreneurs[popup];
+    setSubmitting(true);
+    try {
+      await createSelection(userEmail, ent.id);
+      setConfirmedEnt({ name: ent.name, company: ent.company });
+      setStep("confirmed");
+    } catch (err: any) {
+      if (err?.code === "23505") {
+        toast.error("Você já está inscrito em um empresário.");
+      } else {
+        toast.error("Erro ao confirmar inscrição. Tente novamente.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Success screen
-  if (step === "confirmed" && popup !== null) {
-    const ent = ENTREPRENEURS[popup];
+  if (step === "confirmed" && confirmedEnt) {
     return (
       <main className="max-w-[520px] mx-auto px-6 py-20 flex flex-col items-center min-h-[80vh] justify-center text-center">
         <div className="w-20 h-20 rounded-3xl bg-foreground flex items-center justify-center mb-8">
@@ -34,7 +56,7 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
         </div>
         <h2 className="text-[28px] font-normal tracking-tight text-foreground">Inscrição confirmada</h2>
         <p className="text-[15px] text-muted-foreground mt-3 leading-relaxed">
-          Você está inscrito para criar conteúdo para <strong className="text-foreground">{ent.name}</strong> da <strong className="text-foreground">{ent.company}</strong>.
+          Você está inscrito para criar conteúdo para <strong className="text-foreground">{confirmedEnt.name}</strong> da <strong className="text-foreground">{confirmedEnt.company}</strong>.
         </p>
         <p className="text-[13px] text-muted-foreground mt-6 leading-relaxed">
           Fique atento ao prazo de entrega. O cronograma completo está disponível na página inicial.
@@ -46,7 +68,15 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
     );
   }
 
-  const selectedEnt = popup !== null ? ENTREPRENEURS[popup] : null;
+  if (isLoading) {
+    return (
+      <main className="max-w-[880px] mx-auto px-6 pt-12 pb-20 flex items-center justify-center min-h-[60vh]">
+        <p className="text-muted-foreground text-sm">Carregando empresários...</p>
+      </main>
+    );
+  }
+
+  const selectedEnt = popup !== null ? entrepreneurs[popup] : null;
 
   return (
     <main className="max-w-[880px] mx-auto px-6 pt-12 pb-20 relative">
@@ -67,7 +97,7 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
 
       {/* Grid */}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
-        {ENTREPRENEURS.map((ent, i) => {
+        {entrepreneurs.map((ent, i) => {
           const full = ent.taken >= ent.slots;
           const remaining = ent.slots - ent.taken;
           return (
@@ -175,7 +205,9 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
 
               <div className="flex gap-2.5 mt-5">
                 <Button onClick={() => setStep("info")} variant="outline" className="flex-1 rounded-xl">Voltar</Button>
-                <Button onClick={handleConfirm} className="flex-[2] rounded-xl">Sim, confirmar inscrição</Button>
+                <Button onClick={handleConfirm} disabled={submitting} className="flex-[2] rounded-xl">
+                  {submitting ? "Confirmando..." : "Sim, confirmar inscrição"}
+                </Button>
               </div>
             </>
           )}
