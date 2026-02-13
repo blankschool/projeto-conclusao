@@ -12,22 +12,37 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!email || !email.includes("@")) {
       setStatus("error");
       setErrorMsg("Insira um e-mail válido.");
       return;
     }
     setStatus("loading");
-    setTimeout(() => {
-      if (email.toLowerCase().includes("blank") || email.toLowerCase().includes("teste")) {
+    try {
+      const res = await fetch(
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQcrRsRetEFdFk7tlIFgBLmRprPY5Z5vsZiTbRzgKgqIV-5N2SnTPSQivGyvW3Me2rCMBIQ-4Fy45ei/pub?gid=1657701443&single=true&output=csv"
+      );
+      const csv = await res.text();
+      const rows = csv.split("\n").slice(1);
+      const emails = rows
+        .map((row) => {
+          const cols = row.split(",");
+          return cols[2]?.trim().toLowerCase().replace(/"/g, "");
+        })
+        .filter(Boolean);
+      const inputEmail = email.trim().toLowerCase();
+      if (emails.includes(inputEmail)) {
         setStatus("success");
         setTimeout(() => onAuth(email), 800);
       } else {
         setStatus("error");
         setErrorMsg("E-mail não encontrado na base de alunos.");
       }
-    }, 1500);
+    } catch {
+      setStatus("error");
+      setErrorMsg("Erro ao verificar e-mail. Tente novamente.");
+    }
   };
 
   return (
