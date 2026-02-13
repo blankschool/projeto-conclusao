@@ -1,82 +1,35 @@
 
 
-# Integrar dados do app com Supabase self-hosted
+# Validar e-mail dos alunos via Google Sheets
 
 ## Resumo
-Mover todos os dados estáticos (empresários, calendário, etapas do fluxo e regras) para tabelas no Supabase self-hosted, mantendo a validação de e-mail apenas no front-end. Também criar uma tabela de inscrições para registrar quando um aluno seleciona um empresário.
+Substituir a validacao hardcoded (que aceita emails com "blank" ou "teste") por uma verificacao real contra a planilha publica do Google Sheets que contem todos os alunos matriculados.
 
-## Tabelas no Supabase
+## Como funciona
 
-### 1. `entrepreneurs`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | serial (PK) | ID do empresário |
-| name | text | Nome completo |
-| company | text | Nome da empresa |
-| segment | text | Segmento de atuação |
-| slots | integer | Total de vagas |
-| avatar | text | Iniciais (ex: "MO") |
-| bio | text | Biografia |
+A planilha ja esta publicada como CSV publico. O app vai buscar o CSV diretamente no navegador, extrair a coluna EMAIL e comparar com o e-mail digitado pelo aluno.
 
-### 2. `calendar_events`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | serial (PK) | ID |
-| date | text | Data formatada (ex: "17 Fev") |
-| day | text | Dia da semana (ex: "Seg") |
-| title | text | Título do evento |
-| description | text | Descrição |
-| is_active | boolean | Se o evento está ativo |
-| sort_order | integer | Ordem de exibição |
+URL do CSV:
+```
+https://docs.google.com/spreadsheets/d/e/2PACX-1vQcrRsRetEFdFk7tlIFgBLmRprPY5Z5vsZiTbRzgKgqIV-5N2SnTPSQivGyvW3Me2rCMBIQ-4Fy45ei/pub?gid=1657701443&single=true&output=csv
+```
 
-### 3. `flow_steps`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | serial (PK) | ID |
-| step_number | text | Número (ex: "01") |
-| title | text | Título da etapa |
-| description | text | Descrição |
-| sort_order | integer | Ordem |
+## Mudancas no codigo
 
-### 4. `rules`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | serial (PK) | ID |
-| text | text | Texto da regra |
-| sort_order | integer | Ordem |
+### Arquivo: `src/pages/AuthPage.tsx`
 
-### 5. `selections` (inscrições dos alunos)
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid (PK) | ID da inscrição |
-| email | text | E-mail do aluno |
-| entrepreneur_id | integer (FK) | Empresário selecionado |
-| created_at | timestamptz | Data da inscrição |
+Substituir o `setTimeout` com logica fake por:
 
-## O que NÃO vai para o Supabase
-- A lógica de validação de e-mail (continua no front-end, aceitando emails com "blank" ou "teste")
+1. Fazer `fetch()` da URL do CSV publico
+2. Parsear o CSV para extrair a coluna EMAIL (indice 2)
+3. Comparar o e-mail digitado (lowercase/trim) com a lista
+4. Se encontrado: sucesso e redirecionar
+5. Se nao encontrado: mostrar erro "E-mail nao encontrado na base de alunos"
 
-## Mudanças no código
+### Detalhes tecnicos
 
-### Novos arquivos
-1. **`src/lib/supabase.ts`** -- Cliente Supabase configurado com a URL e anon key fornecidos (chave pública, segura para o front-end)
-2. **`src/hooks/useEntrepreneurs.ts`** -- Hook com React Query para buscar empresários e contagem de vagas ocupadas
-3. **`src/hooks/useCalendarEvents.ts`** -- Hook para buscar eventos do calendário
-4. **`src/hooks/useFlowSteps.ts`** -- Hook para buscar etapas do fluxo
-5. **`src/hooks/useRules.ts`** -- Hook para buscar regras
-
-### Arquivos modificados
-1. **`src/pages/ExplanationPage.tsx`** -- Usar os hooks em vez dos dados estáticos
-2. **`src/pages/SelectionPage.tsx`** -- Usar hook de empresários; ao confirmar inscrição, inserir registro na tabela `selections` e recalcular vagas
-3. **`src/data/entrepreneurs.ts`** -- Removido ou esvaziado (dados agora vêm do Supabase)
-
-## Segurança (RLS)
-- Tabelas de dados (entrepreneurs, calendar_events, flow_steps, rules): RLS habilitado com policy de SELECT público (dados são de leitura)
-- Tabela selections: RLS habilitado com policy de INSERT público (qualquer aluno pode se inscrever) e SELECT público (para contar vagas ocupadas)
-- Um aluno não pode se inscrever duas vezes (constraint UNIQUE no email da tabela selections)
-
-## Detalhes técnicos
-- A anon key fornecida é uma chave pública (publishable), portanto é seguro armazená-la no código front-end
-- O campo `taken` dos empresários será calculado dinamicamente contando os registros em `selections` para cada entrepreneur_id
-- Os dados iniciais serão inseridos via migration SQL
-
+- O CSV e publico, nao precisa de autenticacao
+- A comparacao sera case-insensitive e com trim para evitar problemas de formatacao
+- Nenhuma dependencia nova necessaria (usa `fetch` nativo e split para parsear CSV simples)
+- A coluna EMAIL e a terceira coluna (indice 2) no CSV
+- Mantemos os mesmos estados visuais (idle, loading, error, success) e mensagens
