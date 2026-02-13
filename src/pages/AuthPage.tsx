@@ -56,10 +56,6 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
 
   return (
     <main className="max-w-[480px] mx-auto px-6 py-20 flex flex-col items-center min-h-[80vh] justify-center">
-      <div className="w-16 h-16 rounded-2xl bg-foreground flex items-center justify-center mb-8">
-        <span className="text-3xl text-background">✦</span>
-      </div>
-
       <h2 className="text-[28px] font-normal text-center tracking-tight text-foreground">
         Acesse a plataforma
       </h2>
