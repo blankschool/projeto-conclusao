@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Instagram, Linkedin, Globe, ExternalLink, FileText, ArrowLeft, Lock } from "lucide-react";
-
-const SELECTION_CLOSE_DATE = "24/02";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 interface EntrepreneurProfilePageProps {
   entrepreneurId: number;
@@ -14,7 +13,9 @@ interface EntrepreneurProfilePageProps {
 
 export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: EntrepreneurProfilePageProps) {
   const { data: entrepreneurs = [], isLoading } = useEntrepreneurs();
+  const { data: calendarEvents = [] } = useCalendarEvents();
   const ent = entrepreneurs.find((e) => e.id === entrepreneurId);
+  const selectionDate = calendarEvents.length >= 2 ? calendarEvents[1].date : "em breve";
 
   if (isLoading) {
     return (
@@ -156,7 +157,7 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
           <div className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-lg">
             <Lock className="w-6 h-6 text-muted-foreground" />
             <p className="text-sm text-foreground font-medium text-center">
-              Informações disponíveis a partir de {SELECTION_CLOSE_DATE}
+              Informações disponíveis a partir de {selectionDate}
             </p>
           </div>
         </div>
