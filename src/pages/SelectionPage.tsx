@@ -9,35 +9,22 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-
-const entrepreneurPhotos: Record<string, string> = {
-  "Rony": "/entrepreneurs/rony.png",
-  "Renata": "/entrepreneurs/renata.png",
-  "Sandra": "/entrepreneurs/sandra.png",
-  "Tallis": "/entrepreneurs/tallis.png",
-  "Natalia": "/entrepreneurs/natalia.png",
-};
-
-const getPhotoByName = (name: string): string | null => {
-  for (const key of Object.keys(entrepreneurPhotos)) {
-    if (name.toLowerCase().includes(key.toLowerCase())) return entrepreneurPhotos[key];
-  }
-  return null;
-};
+import { getPhotoByName } from "@/lib/entrepreneurPhotos";
 
 interface SelectionPageProps {
   userEmail: string;
   onBack: () => void;
+  onConfirmed: (entrepreneurId: number) => void;
 }
 
-export default function SelectionPage({ userEmail, onBack }: SelectionPageProps) {
+export default function SelectionPage({ userEmail, onBack, onConfirmed }: SelectionPageProps) {
   const { data: entrepreneurs = [], isLoading } = useEntrepreneurs();
   const createSelection = useCreateSelection();
   const [popup, setPopup] = useState<number | null>(null);
   const [step, setStep] = useState<"info" | "preconfirm" | "confirmed">("info");
-  const [confirmedEnt, setConfirmedEnt] = useState<{ name: string; company: string } | null>(null);
+  const [confirmedEntId, setConfirmedEntId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleClosePopup = () => { setPopup(null); setStep("info"); };
@@ -49,8 +36,8 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
     setSubmitting(true);
     try {
       await createSelection(userEmail, ent.id);
-      setConfirmedEnt({ name: ent.name, company: ent.company });
-      setStep("confirmed");
+      setConfirmedEntId(ent.id);
+      onConfirmed(ent.id);
     } catch (err: any) {
       if (err?.code === "23505") {
         toast.error("Você já está inscrito em um empresário.");
@@ -61,27 +48,6 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
       setSubmitting(false);
     }
   };
-
-  // Success screen
-  if (step === "confirmed" && confirmedEnt) {
-    return (
-      <main className="max-w-[520px] mx-auto px-6 py-20 flex flex-col items-center min-h-[80vh] justify-center text-center">
-        <div className="w-20 h-20 rounded-3xl bg-foreground flex items-center justify-center mb-8">
-          <Check className="w-9 h-9 text-background" />
-        </div>
-        <h2 className="text-[28px] font-normal tracking-tight text-foreground">Inscrição confirmada</h2>
-        <p className="text-[15px] text-muted-foreground mt-3 leading-relaxed">
-          Você está inscrito para criar conteúdo para <strong className="text-foreground">{confirmedEnt.name}</strong> da <strong className="text-foreground">{confirmedEnt.company}</strong>.
-        </p>
-        <p className="text-[13px] text-muted-foreground mt-6 leading-relaxed">
-          Fique atento ao prazo de entrega. O cronograma completo está disponível na página inicial.
-        </p>
-        <Button onClick={onBack} variant="outline" className="mt-8 rounded-xl">
-          Voltar ao início
-        </Button>
-      </main>
-    );
-  }
 
   if (isLoading) {
     return (
