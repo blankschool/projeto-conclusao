@@ -1,76 +1,50 @@
 
 
-# Pagina do Empresario apos inscricao
+# Adicionar Instagram e seguidores nos cards e dialog da Etapa 2
 
 ## Visao geral
 
-Apos confirmar a inscricao, em vez de mostrar apenas a tela de sucesso, o aluno sera redirecionado para uma pagina completa do empresario com informacoes detalhadas para ajuda-lo na producao de conteudo. Essa pagina tera: biografia expandida, links uteis (redes sociais, site) e exemplos/referencias de conteudo.
-
-## Estrutura de dados
-
-Como as informacoes atuais no Supabase sao limitadas (apenas bio curta), sera necessario adicionar novos campos a tabela `entrepreneurs` ou criar uma abordagem com dados locais. A solucao mais pratica e adicionar os campos extras diretamente na tabela existente:
-
-- `full_bio` (text) -- biografia completa e detalhada
-- `instagram_url` (text, nullable)
-- `linkedin_url` (text, nullable)
-- `website_url` (text, nullable)
-- `content_guidelines` (text, nullable) -- briefing / diretrizes de tom de voz
-- `content_examples` (text[], nullable) -- lista de URLs de exemplos de conteudo
-
-Por enquanto, como voce pode nao ter esses dados prontos ainda, vou criar a pagina com os campos que ja existem (bio, foto, empresa, segmento) e deixar espaco visual para os campos extras. Quando voce popular os dados no Supabase, eles aparecem automaticamente.
+Adicionar o link do Instagram e o numero de seguidores de cada empresario nos cards da pagina de selecao e no dialog de detalhes. Isso da mais contexto ao aluno sobre o alcance do empresario antes de escolher.
 
 ## Mudancas
 
-### 1. Novo arquivo: `src/pages/EntrepreneurProfilePage.tsx`
+### 1. Migracao SQL (Supabase)
 
-Pagina dedicada ao perfil do empresario contendo:
-- Foto grande + nome + empresa + segmento
-- Secao "Sobre" com a biografia completa (ou bio curta como fallback)
-- Secao "Links uteis" com icones para Instagram, LinkedIn e site (quando disponiveis)
-- Secao "Diretrizes de conteudo" com orientacoes de tom de voz (quando disponivel)
-- Secao "Referencias" com exemplos de conteudo (quando disponivel)
-- Botao "Voltar ao inicio"
-
-### 2. Arquivo: `src/hooks/useEntrepreneurs.ts`
-
-- Atualizar a interface `Entrepreneur` para incluir os novos campos opcionais:
-  - `full_bio?: string`
-  - `instagram_url?: string`
-  - `linkedin_url?: string`
-  - `website_url?: string`
-  - `content_guidelines?: string`
-  - `content_examples?: string[]`
-
-### 3. Arquivo: `src/pages/SelectionPage.tsx`
-
-- Alterar o fluxo pos-confirmacao: em vez de mostrar a tela de sucesso inline, chamar um callback `onConfirmed` passando o empresario selecionado
-- Manter a tela de sucesso como transicao breve ou remover em favor do redirecionamento direto
-
-### 4. Arquivo: `src/pages/Index.tsx`
-
-- Adicionar novo estado de pagina: `"profile"`
-- Armazenar o ID do empresario confirmado
-- Renderizar `EntrepreneurProfilePage` quando `page === "profile"`
-- Atualizar o indicador de progresso no nav (4 pontos em vez de 3)
-
-### 5. Migracao SQL (Supabase)
-
-Adicionar os novos campos a tabela `entrepreneurs`:
+Adicionar campo `instagram_followers` na tabela `entrepreneurs`:
 
 ```sql
 ALTER TABLE entrepreneurs
-  ADD COLUMN IF NOT EXISTS full_bio text,
-  ADD COLUMN IF NOT EXISTS instagram_url text,
-  ADD COLUMN IF NOT EXISTS linkedin_url text,
-  ADD COLUMN IF NOT EXISTS website_url text,
-  ADD COLUMN IF NOT EXISTS content_guidelines text,
-  ADD COLUMN IF NOT EXISTS content_examples text[];
+  ADD COLUMN IF NOT EXISTS instagram_followers integer;
 ```
+
+O campo `instagram_url` ja existe na tabela.
+
+### 2. Arquivo: `src/hooks/useEntrepreneurs.ts`
+
+Adicionar o campo opcional na interface `Entrepreneur`:
+
+- `instagram_followers?: number`
+
+### 3. Arquivo: `src/pages/SelectionPage.tsx`
+
+**Nos cards (grid):** Abaixo do segmento e acima da barra de vagas, adicionar uma linha com o icone do Instagram + @ handle + numero de seguidores formatado (ex: "12.5k seguidores"). So aparece se `instagram_url` estiver preenchido.
+
+**No dialog de detalhes (step "info"):** Abaixo da bio, adicionar uma secao com:
+- Link clicavel para o Instagram (abre em nova aba)
+- Numero de seguidores formatado
+- Icone do Instagram (do lucide-react)
+
+### 4. Formatacao de seguidores
+
+Funcao utilitaria para formatar numeros:
+- Menos de 1000: mostra o numero direto (ex: "850")
+- 1k a 999k: mostra com "k" (ex: "12.5k")
+- 1M+: mostra com "M" (ex: "1.2M")
 
 ## Detalhes tecnicos
 
-- A pagina de perfil reutiliza o hook `useEntrepreneurs` existente, filtrando pelo ID do empresario selecionado
-- O mapa de fotos `entrepreneurPhotos` sera extraido para um utilitario compartilhado para uso tanto no SelectionPage quanto no EntrepreneurProfilePage
-- Campos sem dados aparecerao com placeholder sutil ("Informacoes em breve") para que a pagina funcione mesmo antes de popular todos os campos no banco
-- Design segue o mesmo padrao visual do projeto: tipografia com serif nos titulos, sans nos labels, cores via tokens do tema
+- O icone `Instagram` do lucide-react sera usado para o link
+- O handle do Instagram sera extraido da URL (removendo "https://instagram.com/")
+- Campos vazios nao renderizam nada -- os cards continuam funcionando normalmente sem dados
+- A secao de seguidores no card usa texto discreto (text-muted-foreground, text-xs) para nao poluir visualmente
 
