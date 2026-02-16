@@ -30,9 +30,7 @@ export default function ExplanationPage({ onStart }: ExplanationPageProps) {
         <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">
           Projeto de conclusão — turma 2026.1
         </p>
-        <h1 className="text-[clamp(30px,5vw,48px)] font-normal leading-[1.1] tracking-tight text-foreground">Crie conteúdo para os clientes Blank
-          <br />para clientes <span className="text-foreground italic">Blank</span>
-        </h1>
+        <h1 className="text-[clamp(30px,5vw,48px)] font-normal leading-[1.1] tracking-tight text-foreground">Crie conteúdo para os clientes da <span className="text-foreground italic">Blank</span>.</h1>
         <p className="text-base text-muted-foreground mt-4 max-w-[520px] leading-relaxed">
           Seu projeto de conclusão é produzir conteúdo para um empresário real da carteira Blank.
           Os melhores trabalhos serão publicados no perfil oficial do cliente.
