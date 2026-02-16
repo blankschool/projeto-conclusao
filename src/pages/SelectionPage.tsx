@@ -124,15 +124,11 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
               <div className="text-[13px] text-foreground font-medium mb-3">{ent.company}</div>
               <div className="text-xs text-muted-foreground leading-relaxed mb-4">{ent.segment}</div>
               <div className="flex justify-between items-center">
-                <div className="flex gap-1">
-                  {Array.from({ length: ent.slots }).map((_, j) => (
-                    <div
-                      key={j}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        j < ent.taken ? "bg-border" : "bg-foreground"
-                      }`}
-                    />
-                  ))}
+                <div className="h-1.5 flex-1 rounded-full bg-border/50 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${full ? "bg-muted-foreground" : "bg-foreground"}`}
+                    style={{ width: `${(ent.taken / ent.slots) * 100}%` }}
+                  />
                 </div>
                 <span className="font-sans text-[10px] text-muted-foreground">
                   {full ? "0 vagas" : `${remaining} ${remaining === 1 ? "vaga" : "vagas"}`}
