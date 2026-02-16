@@ -1,47 +1,20 @@
 
 
-# Blur nas informacoes detalhadas do perfil do empresario
+# Sincronizar data do blur com o calendario de eventos
 
 ## Visao geral
 
-Manter visivel o cabecalho do perfil (foto, nome, empresa, segmento, redes sociais) e aplicar um efeito de blur sobre todas as secoes de conteudo detalhado (Sobre, Diretrizes de conteudo, Referencias). Por cima do blur, exibir um aviso informando a data em que as informacoes serao liberadas (data de encerramento da etapa de selecao).
-
-## O que fica visivel
-
-- Botao "Voltar ao inicio"
-- Foto, nome, empresa, segmento (badge)
-- Links uteis (Instagram, LinkedIn, Site)
-
-## O que fica com blur
-
-- Secao "Sobre" (biografia)
-- Secao "Diretrizes de conteudo"
-- Secao "Referencias de conteudo"
-- Rodape com mensagem de prazo e botao "Voltar"
-
-## Como funciona o blur
-
-Um wrapper `div` com `position: relative` envolve todas as secoes bloqueadas. Dentro dele:
-
-1. O conteudo real continua renderizado normalmente, mas com `filter: blur(8px)` e `select-none pointer-events-none`
-2. Um overlay absoluto centralizado por cima com:
-   - Icone de cadeado (Lock do lucide-react)
-   - Texto: "Informacoes disponiveis a partir de DD/MM" (data configuravel via constante no arquivo)
-   - Fundo semi-transparente sutil para destacar o texto
-
-Isso cria o efeito de "suspense" -- o usuario ve que tem conteudo ali mas nao consegue ler.
-
-## Controle da data
-
-Uma constante `SELECTION_CLOSE_DATE` no topo do componente (ex: `"24/02"`) que voce pode alterar facilmente quando definir a data exata. Futuramente pode virar uma config do Supabase.
+Remover a constante fixa `SELECTION_CLOSE_DATE = "24/02"` e buscar a data diretamente da tabela `calendar_events` no Supabase. A data correta e a do segundo evento do calendario ("Encerramento da selecao", sort_order 2, data "18 Fev").
 
 ## Mudancas
 
 ### Arquivo: `src/pages/EntrepreneurProfilePage.tsx`
 
-- Adicionar constante `SELECTION_CLOSE_DATE` no topo
-- Importar icone `Lock` do lucide-react
-- Mover o separador para depois dos links uteis (antes do blur)
-- Envolver as secoes Sobre, Diretrizes, Referencias e rodape em um `div` com posicao relativa
-- Aplicar blur no conteudo e overlay com mensagem por cima
+- Remover a constante `SELECTION_CLOSE_DATE` do topo do arquivo
+- Importar o hook `useCalendarEvents` de `@/hooks/useCalendarEvents`
+- Dentro do componente, chamar `useCalendarEvents()` para obter os eventos
+- Pegar o segundo evento (sort_order 2, ou index 1 da lista ordenada) e usar o campo `date` dele como a data exibida no overlay do blur
+- Se os eventos ainda estiverem carregando ou nao existirem, usar um fallback vazio ou "em breve"
+
+Resultado: a data no overlay do blur ("Informacoes disponiveis a partir de 18 Fev") fica automaticamente sincronizada com o calendario de eventos do Supabase. Se a data mudar no banco, muda no perfil tambem.
 
