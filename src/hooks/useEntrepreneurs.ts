@@ -16,6 +16,7 @@ export interface Entrepreneur {
   website_url?: string;
   content_guidelines?: string;
   content_examples?: string[];
+  instagram_followers?: number;
 }
 
 export function useEntrepreneurs() {
