@@ -9,9 +9,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import { getPhotoByName } from "@/lib/entrepreneurPhotos";
+
+function formatFollowers(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(n);
+}
+
+function extractHandle(url: string): string {
+  return url.replace(/https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
+}
 
 interface SelectionPageProps {
   userEmail: string;
@@ -110,7 +120,17 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
               })()}
               <div className="text-[17px] font-serif font-normal mb-1 text-foreground">{ent.name}</div>
               <div className="text-[13px] text-foreground font-medium mb-3">{ent.company}</div>
-              <div className="text-xs text-muted-foreground leading-relaxed mb-4">{ent.segment}</div>
+              <div className="text-xs text-muted-foreground leading-relaxed mb-2">{ent.segment}</div>
+              {ent.instagram_url && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+                  <Instagram className="w-3.5 h-3.5" />
+                  <span>@{extractHandle(ent.instagram_url)}</span>
+                  {ent.instagram_followers != null && (
+                    <span className="text-muted-foreground/70">· {formatFollowers(ent.instagram_followers)} seguidores</span>
+                  )}
+                </div>
+              )}
+              {!ent.instagram_url && <div className="mb-4" />}
               <div className="flex justify-between items-center">
                 <div className="h-1.5 flex-1 rounded-full bg-border/50 overflow-hidden">
                   <div
@@ -151,6 +171,21 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
               <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                 {selectedEnt.bio}
               </p>
+
+              {selectedEnt.instagram_url && (
+                <a
+                  href={selectedEnt.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 mt-3 text-sm text-foreground hover:text-primary transition-colors"
+                >
+                  <Instagram className="w-4 h-4" />
+                  <span>@{extractHandle(selectedEnt.instagram_url)}</span>
+                  {selectedEnt.instagram_followers != null && (
+                    <span className="text-muted-foreground text-xs">· {formatFollowers(selectedEnt.instagram_followers)} seguidores</span>
+                  )}
+                </a>
+              )}
 
               <div className="grid grid-cols-2 gap-3 mt-4 p-4 rounded-xl bg-muted/50 border border-border">
                 <div>
