@@ -17,6 +17,7 @@ const entrepreneurPhotos: Record<string, string> = {
   "Renata": "/entrepreneurs/renata.png",
   "Sandra": "/entrepreneurs/sandra.png",
   "Tallis": "/entrepreneurs/tallis.png",
+  "Natalia": "/entrepreneurs/natalia.png",
 };
 
 const getPhotoByName = (name: string): string | null => {
