@@ -12,6 +12,17 @@ import {
 import { AlertTriangle, Check } from "lucide-react";
 import { toast } from "sonner";
 
+const entrepreneurPhotos: Record<string, string> = {
+  "Rony": "/entrepreneurs/rony.png",
+};
+
+const getPhotoByName = (name: string): string | null => {
+  for (const key of Object.keys(entrepreneurPhotos)) {
+    if (name.toLowerCase().includes(key.toLowerCase())) return entrepreneurPhotos[key];
+  }
+  return null;
+};
+
 interface SelectionPageProps {
   userEmail: string;
   onBack: () => void;
@@ -115,11 +126,18 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
                   Esgotado
                 </span>
               )}
-              <div className={`w-12 h-12 rounded-xl border border-border flex items-center justify-center font-sans text-sm font-bold mb-5 ${
-                full ? "bg-muted text-muted-foreground" : "bg-foreground/5 text-foreground"
-              }`}>
-                {ent.avatar}
-              </div>
+              {(() => {
+                const photo = getPhotoByName(ent.name);
+                return photo ? (
+                  <img src={photo} alt={ent.name} className="w-12 h-12 rounded-xl object-cover mb-5" />
+                ) : (
+                  <div className={`w-12 h-12 rounded-xl border border-border flex items-center justify-center font-sans text-sm font-bold mb-5 ${
+                    full ? "bg-muted text-muted-foreground" : "bg-foreground/5 text-foreground"
+                  }`}>
+                    {ent.avatar}
+                  </div>
+                );
+              })()}
               <div className="text-[17px] font-serif font-normal mb-1 text-foreground">{ent.name}</div>
               <div className="text-[13px] text-foreground font-medium mb-3">{ent.company}</div>
               <div className="text-xs text-muted-foreground leading-relaxed mb-4">{ent.segment}</div>
@@ -145,9 +163,16 @@ export default function SelectionPage({ userEmail, onBack }: SelectionPageProps)
           {selectedEnt && step === "info" && (
             <>
               <DialogHeader>
-                <div className="w-14 h-14 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-base font-bold text-foreground mb-4">
-                  {selectedEnt.avatar}
-                </div>
+                {(() => {
+                  const photo = getPhotoByName(selectedEnt.name);
+                  return photo ? (
+                    <img src={photo} alt={selectedEnt.name} className="w-14 h-14 rounded-2xl object-cover mb-4" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-base font-bold text-foreground mb-4">
+                      {selectedEnt.avatar}
+                    </div>
+                  );
+                })()}
                 <DialogTitle className="text-[22px] font-normal tracking-tight">{selectedEnt.name}</DialogTitle>
                 <div className="text-sm text-foreground font-medium">{selectedEnt.company}</div>
                 <Badge variant="outline" className="w-fit mt-1">{selectedEnt.segment}</Badge>
