@@ -3,7 +3,9 @@ import { getPhotoByName } from "@/lib/entrepreneurPhotos";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Instagram, Linkedin, Globe, ExternalLink, FileText, ArrowLeft } from "lucide-react";
+import { Instagram, Linkedin, Globe, ExternalLink, FileText, ArrowLeft, Lock } from "lucide-react";
+
+const SELECTION_CLOSE_DATE = "24/02";
 
 interface EntrepreneurProfilePageProps {
   entrepreneurId: number;
@@ -61,17 +63,9 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
         </div>
       </div>
 
-      <Separator className="mb-8" />
-
-      {/* Sobre */}
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Sobre</p>
-        <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-line">{bioText}</p>
-      </section>
-
       {/* Links */}
       {hasLinks ? (
-        <section className="mb-10">
+        <section className="mb-8">
           <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Links úteis</p>
           <div className="flex flex-wrap gap-3">
             {ent.instagram_url && (
@@ -95,54 +89,77 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
           </div>
         </section>
       ) : (
-        <section className="mb-10">
+        <section className="mb-8">
           <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Links úteis</p>
           <p className="text-sm text-muted-foreground italic">Informações em breve</p>
         </section>
       )}
 
-      {/* Diretrizes de conteúdo */}
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Diretrizes de conteúdo</p>
-        {ent.content_guidelines ? (
-          <div className="p-5 rounded-xl border border-border bg-card">
-            <div className="flex items-start gap-3">
-              <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <p className="text-[14px] text-foreground/80 leading-relaxed whitespace-pre-line">{ent.content_guidelines}</p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-        )}
-      </section>
-
-      {/* Referências */}
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Referências de conteúdo</p>
-        {ent.content_examples && ent.content_examples.length > 0 ? (
-          <div className="space-y-2">
-            {ent.content_examples.map((url, i) => (
-              <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-border bg-card hover:border-foreground/25 transition-colors text-sm text-foreground group">
-                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                <span className="truncate">{url}</span>
-              </a>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-        )}
-      </section>
-
       <Separator className="mb-8" />
 
-      <div className="text-center">
-        <p className="text-[13px] text-muted-foreground mb-4">
-          Fique atento ao prazo de entrega. O cronograma completo está disponível na página inicial.
-        </p>
-        <Button onClick={onBack} variant="outline" className="rounded-xl">
-          Voltar ao início
-        </Button>
+      {/* Blurred content */}
+      <div className="relative">
+        <div className="blur-[8px] select-none pointer-events-none">
+          {/* Sobre */}
+          <section className="mb-10">
+            <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Sobre</p>
+            <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-line">{bioText}</p>
+          </section>
+
+          {/* Diretrizes de conteúdo */}
+          <section className="mb-10">
+            <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Diretrizes de conteúdo</p>
+            {ent.content_guidelines ? (
+              <div className="p-5 rounded-xl border border-border bg-card">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <p className="text-[14px] text-foreground/80 leading-relaxed whitespace-pre-line">{ent.content_guidelines}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Informações em breve</p>
+            )}
+          </section>
+
+          {/* Referências */}
+          <section className="mb-10">
+            <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Referências de conteúdo</p>
+            {ent.content_examples && ent.content_examples.length > 0 ? (
+              <div className="space-y-2">
+                {ent.content_examples.map((url, i) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-border bg-card hover:border-foreground/25 transition-colors text-sm text-foreground group">
+                    <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    <span className="truncate">{url}</span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Informações em breve</p>
+            )}
+          </section>
+
+          <Separator className="mb-8" />
+
+          <div className="text-center">
+            <p className="text-[13px] text-muted-foreground mb-4">
+              Fique atento ao prazo de entrega. O cronograma completo está disponível na página inicial.
+            </p>
+            <Button onClick={onBack} variant="outline" className="rounded-xl">
+              Voltar ao início
+            </Button>
+          </div>
+        </div>
+
+        {/* Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-lg">
+            <Lock className="w-6 h-6 text-muted-foreground" />
+            <p className="text-sm text-foreground font-medium text-center">
+              Informações disponíveis a partir de {SELECTION_CLOSE_DATE}
+            </p>
+          </div>
+        </div>
       </div>
     </main>
   );
