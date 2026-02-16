@@ -1,33 +1,27 @@
 
 
-# Melhorar layout dos indicadores de vagas
+# Adicionar foto do Rony ao card de empresario
 
-## Problema
-Os indicadores de vagas (bolinhas) ficam em uma linha longa quando o empresario tem muitas vagas, ocupando muito espaco e ficando visualmente poluido.
+## Resumo
+Salvar a foto do Rony no projeto e atualizar o card dos empresarios para exibir foto quando disponivel, mantendo as iniciais como fallback para os que ainda nao tem foto.
 
-## Solucao
-Substituir as bolinhas por uma barra de progresso compacta mostrando vagas ocupadas vs. total, mantendo o texto "X vagas" ao lado.
+## Mudancas
 
-### Visual proposto
+### 1. Copiar a imagem para o projeto
+- Salvar `user-uploads://image.png` em `public/entrepreneurs/rony.png`
 
-```text
-[=======-----]  3 vagas
- (ocupadas)  (livres)
-```
+### 2. Arquivo: `src/pages/SelectionPage.tsx`
+- Criar um mapa de fotos: um objeto que relaciona o nome do empresario ao caminho da imagem
+  - Ex: `{ "Rony": "/entrepreneurs/rony.png" }`
+- No card, substituir o avatar de iniciais por uma imagem quando existir no mapa
+- Se nao houver foto, manter o fallback com as iniciais (avatar atual)
+- Aplicar a mesma logica no Dialog de detalhes do empresario
 
-- Barra com fundo cinza claro (border color)
-- Preenchimento com cor do foreground para as vagas ocupadas
-- Texto "X vagas" ao lado (ja existe)
+### 3. Visual
+- A foto sera exibida no mesmo espaco do avatar atual (48x48 no card, 56x56 no dialog)
+- Usar `object-cover` e `rounded-xl` para manter o estilo dos cards
+- Iniciais continuam aparecendo para empresarios sem foto
 
-## Mudanca
-
-### Arquivo: `src/pages/SelectionPage.tsx`
-
-Substituir o bloco de bolinhas (linhas 127-135) por uma barra de progresso simples usando divs com largura percentual:
-
-- Container: `h-1.5 flex-1 rounded-full bg-border/50`
-- Preenchimento: `h-full rounded-full bg-foreground` com `width` calculado como `(taken/slots)*100%`
-- Se esgotado: barra com cor `bg-muted-foreground`
-
-Manter o texto de vagas restantes ao lado como esta hoje.
+## Proximos passos
+Quando voce enviar as fotos dos outros empresarios, basta salvar no mesmo diretorio e adicionar ao mapa de nomes.
 
