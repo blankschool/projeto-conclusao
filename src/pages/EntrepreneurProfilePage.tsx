@@ -157,7 +157,7 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
           <div className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-background/80 backdrop-blur-sm border border-border shadow-lg">
             <Lock className="w-6 h-6 text-muted-foreground" />
             <p className="text-sm text-foreground font-medium text-center">
-              Informações disponíveis a partir de {selectionDate}
+              Liberaremos todo o material completo após o período de seleção no dia {selectionDate}.
             </p>
           </div>
         </div>
