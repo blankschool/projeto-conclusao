@@ -1,20 +1,26 @@
 
 
-# Sincronizar data do blur com o calendario de eventos
+# Adicionar link de suporte via WhatsApp na pagina de autenticacao
 
 ## Visao geral
 
-Remover a constante fixa `SELECTION_CLOSE_DATE = "24/02"` e buscar a data diretamente da tabela `calendar_events` no Supabase. A data correta e a do segundo evento do calendario ("Encerramento da selecao", sort_order 2, data "18 Fev").
+A pagina de autenticacao (`AuthPage.tsx`) ja possui um texto no rodape mencionando "entre em contato com o suporte da Blank", porem sem link clicavel. A mudanca transforma esse texto em um link direto para o WhatsApp do suporte.
 
-## Mudancas
+## Mudanca
 
-### Arquivo: `src/pages/EntrepreneurProfilePage.tsx`
+### Arquivo: `src/pages/AuthPage.tsx` (linha 119-121)
 
-- Remover a constante `SELECTION_CLOSE_DATE` do topo do arquivo
-- Importar o hook `useCalendarEvents` de `@/hooks/useCalendarEvents`
-- Dentro do componente, chamar `useCalendarEvents()` para obter os eventos
-- Pegar o segundo evento (sort_order 2, ou index 1 da lista ordenada) e usar o campo `date` dele como a data exibida no overlay do blur
-- Se os eventos ainda estiverem carregando ou nao existirem, usar um fallback vazio ou "em breve"
+Substituir o paragrafo atual:
 
-Resultado: a data no overlay do blur ("Informacoes disponiveis a partir de 18 Fev") fica automaticamente sincronizada com o calendario de eventos do Supabase. Se a data mudar no banco, muda no perfil tambem.
+```
+Caso não consiga acessar, entre em contato com o suporte da Blank.
+```
+
+Por um texto com link clicavel para o WhatsApp:
+
+```
+Caso não consiga acessar, fale com o suporte da Blank.
+```
+
+Onde "fale com o suporte" sera um link (`<a>`) apontando para `https://wa.me/5512982115609?text=Quero%20ajuda%20com%20a%20plataforma%20do%20Projeto%20de%20Conclus%C3%A3o.`, abrindo em nova aba (`target="_blank"`), com estilo de underline e cor destacada para ficar clicavel.
 
