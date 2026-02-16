@@ -35,7 +35,7 @@ const Index = () => {
 
       {/* Pages */}
       {page === "explanation" && <ExplanationPage onStart={() => setPage("auth")} />}
-      {page === "auth" && <AuthPage onAuth={(email) => { setUserEmail(email); setPage("selection"); }} />}
+      {page === "auth" && <AuthPage onAuth={(email, existingEntId?) => { setUserEmail(email); if (existingEntId) { setConfirmedEntId(existingEntId); setPage("profile"); } else { setPage("selection"); } }} />}
       {page === "selection" && (
         <SelectionPage
           userEmail={userEmail}
