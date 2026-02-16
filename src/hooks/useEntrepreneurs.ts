@@ -10,6 +10,12 @@ export interface Entrepreneur {
   avatar: string;
   bio: string;
   taken: number;
+  full_bio?: string;
+  instagram_url?: string;
+  linkedin_url?: string;
+  website_url?: string;
+  content_guidelines?: string;
+  content_examples?: string[];
 }
 
 export function useEntrepreneurs() {

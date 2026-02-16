@@ -2,12 +2,14 @@ import { useState } from "react";
 import ExplanationPage from "./ExplanationPage";
 import AuthPage from "./AuthPage";
 import SelectionPage from "./SelectionPage";
+import EntrepreneurProfilePage from "./EntrepreneurProfilePage";
 
-type Page = "explanation" | "auth" | "selection";
+type Page = "explanation" | "auth" | "selection" | "profile";
 
 const Index = () => {
   const [page, setPage] = useState<Page>("explanation");
   const [userEmail, setUserEmail] = useState("");
+  const [confirmedEntId, setConfirmedEntId] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -17,10 +19,10 @@ const Index = () => {
           src="/blank-logo.svg"
           alt="Blank"
           className="h-6 cursor-pointer"
-          onClick={() => { setPage("explanation"); setUserEmail(""); }}
+          onClick={() => { setPage("explanation"); setUserEmail(""); setConfirmedEntId(null); }}
         />
         <div className="flex gap-1">
-          {(["explanation", "auth", "selection"] as Page[]).map((p) => (
+          {(["explanation", "auth", "selection", "profile"] as Page[]).map((p) => (
             <div
               key={p}
               className={`w-6 h-[3px] rounded-sm transition-colors ${
@@ -34,7 +36,19 @@ const Index = () => {
       {/* Pages */}
       {page === "explanation" && <ExplanationPage onStart={() => setPage("auth")} />}
       {page === "auth" && <AuthPage onAuth={(email) => { setUserEmail(email); setPage("selection"); }} />}
-      {page === "selection" && <SelectionPage userEmail={userEmail} onBack={() => { setPage("explanation"); setUserEmail(""); }} />}
+      {page === "selection" && (
+        <SelectionPage
+          userEmail={userEmail}
+          onBack={() => { setPage("explanation"); setUserEmail(""); }}
+          onConfirmed={(id) => { setConfirmedEntId(id); setPage("profile"); }}
+        />
+      )}
+      {page === "profile" && confirmedEntId && (
+        <EntrepreneurProfilePage
+          entrepreneurId={confirmedEntId}
+          onBack={() => { setPage("explanation"); setUserEmail(""); setConfirmedEntId(null); }}
+        />
+      )}
 
       {/* Footer */}
       <footer className="text-center py-6 font-sans text-[10px] tracking-[0.2em] uppercase text-border">
