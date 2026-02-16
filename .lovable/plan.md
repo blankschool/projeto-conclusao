@@ -1,50 +1,35 @@
 
 
-# Adicionar Instagram e seguidores nos cards e dialog da Etapa 2
+# Redirecionar usuario ja inscrito direto para o perfil
 
 ## Visao geral
 
-Adicionar o link do Instagram e o numero de seguidores de cada empresario nos cards da pagina de selecao e no dialog de detalhes. Isso da mais contexto ao aluno sobre o alcance do empresario antes de escolher.
+Quando o usuario digitar o e-mail na etapa de autenticacao, antes de ir para a pagina de selecao, o sistema consulta a tabela `selections` no Supabase para verificar se ja existe uma inscricao para aquele e-mail. Se existir, pula a etapa de selecao e vai direto para a pagina de perfil do empresario correspondente.
 
 ## Mudancas
 
-### 1. Migracao SQL (Supabase)
+### 1. Arquivo: `src/pages/Index.tsx`
 
-Adicionar campo `instagram_followers` na tabela `entrepreneurs`:
+Alterar o callback `onAuth` para aceitar um segundo parametro opcional com o ID do empresario ja selecionado:
 
-```sql
-ALTER TABLE entrepreneurs
-  ADD COLUMN IF NOT EXISTS instagram_followers integer;
-```
+- Se receber o ID, vai direto para `"profile"` com o `confirmedEntId` preenchido
+- Se nao receber, vai para `"selection"` como antes
 
-O campo `instagram_url` ja existe na tabela.
+### 2. Arquivo: `src/pages/AuthPage.tsx`
 
-### 2. Arquivo: `src/hooks/useEntrepreneurs.ts`
+Alterar a interface `onAuth` para `(email: string, existingEntrepreneurId?: number) => void`.
 
-Adicionar o campo opcional na interface `Entrepreneur`:
+Apos validar o e-mail na planilha (aluno encontrado), antes de redirecionar:
+- Consultar `supabase.from("selections").select("entrepreneur_id").eq("email", email).maybeSingle()`
+- Se retornar um registro, chamar `onAuth(email, entrepreneur_id)` -- pula a selecao
+- Se nao retornar, chamar `onAuth(email)` -- fluxo normal para selecao
 
-- `instagram_followers?: number`
-
-### 3. Arquivo: `src/pages/SelectionPage.tsx`
-
-**Nos cards (grid):** Abaixo do segmento e acima da barra de vagas, adicionar uma linha com o icone do Instagram + @ handle + numero de seguidores formatado (ex: "12.5k seguidores"). So aparece se `instagram_url` estiver preenchido.
-
-**No dialog de detalhes (step "info"):** Abaixo da bio, adicionar uma secao com:
-- Link clicavel para o Instagram (abre em nova aba)
-- Numero de seguidores formatado
-- Icone do Instagram (do lucide-react)
-
-### 4. Formatacao de seguidores
-
-Funcao utilitaria para formatar numeros:
-- Menos de 1000: mostra o numero direto (ex: "850")
-- 1k a 999k: mostra com "k" (ex: "12.5k")
-- 1M+: mostra com "M" (ex: "1.2M")
+A mensagem de "Redirecionando..." continua aparecendo normalmente nos dois casos.
 
 ## Detalhes tecnicos
 
-- O icone `Instagram` do lucide-react sera usado para o link
-- O handle do Instagram sera extraido da URL (removendo "https://instagram.com/")
-- Campos vazios nao renderizam nada -- os cards continuam funcionando normalmente sem dados
-- A secao de seguidores no card usa texto discreto (text-muted-foreground, text-xs) para nao poluir visualmente
+- A consulta ao Supabase e feita logo apos a validacao do e-mail na planilha, antes do `setTimeout` que redireciona
+- Usa `maybeSingle()` para retornar `null` se nao houver selecao (sem erro)
+- Nenhuma mudanca na tabela `selections` e necessaria -- so leitura
+- O indicador de progresso no nav vai mostrar a etapa correta automaticamente (pula de "auth" para "profile")
 
