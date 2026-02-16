@@ -117,7 +117,16 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
       </Button>
 
       <p className="text-xs text-muted-foreground mt-6 text-center leading-relaxed">
-        Caso não consiga acessar, entre em contato com o suporte da Blank.
+        Caso não consiga acessar,{" "}
+        <a
+          href="https://wa.me/5512982115609?text=Quero%20ajuda%20com%20a%20plataforma%20do%20Projeto%20de%20Conclus%C3%A3o."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-primary hover:text-primary/80 transition-colors"
+        >
+          fale com o suporte
+        </a>{" "}
+        da Blank.
       </p>
     </main>
   );
