@@ -15,6 +15,7 @@ import { toast } from "sonner";
 const entrepreneurPhotos: Record<string, string> = {
   "Rony": "/entrepreneurs/rony.png",
   "Renata": "/entrepreneurs/renata.png",
+  "Sandra": "/entrepreneurs/sandra.png",
 };
 
 const getPhotoByName = (name: string): string | null => {
