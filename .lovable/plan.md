@@ -1,47 +1,33 @@
 
 
-# Mostrar informacoes do aluno apos validacao do e-mail
+# Melhorar layout dos indicadores de vagas
 
-## Resumo
-Apos verificar o e-mail na planilha, exibir o nome, telefone e e-mail do aluno na tela de autenticacao antes de redirecionar, para que o usuario confirme sua identidade.
+## Problema
+Os indicadores de vagas (bolinhas) ficam em uma linha longa quando o empresario tem muitas vagas, ocupando muito espaco e ficando visualmente poluido.
 
-## Dados disponiveis na planilha (CSV)
-- Coluna 1 (indice 1): NAME
-- Coluna 2 (indice 2): EMAIL
-- Coluna 3 (indice 3): PHONE NUMBER
+## Solucao
+Substituir as bolinhas por uma barra de progresso compacta mostrando vagas ocupadas vs. total, mantendo o texto "X vagas" ao lado.
 
-## Mudancas
-
-### Arquivo: `src/pages/AuthPage.tsx`
-
-1. Adicionar um estado para guardar os dados do aluno encontrado:
-   - `studentInfo: { name: string; email: string; phone: string } | null`
-
-2. Quando o e-mail for encontrado no CSV, extrair nome e telefone da mesma linha e salvar no estado.
-
-3. Substituir a mensagem simples de sucesso ("E-mail verificado. Redirecionando...") por um card com as informacoes do aluno:
-   - Nome do aluno
-   - E-mail
-   - Telefone
-
-4. Manter o redirecionamento automatico apos 1.5s (aumentar um pouco o delay para o aluno ter tempo de ver seus dados).
-
-## Visual do card de sucesso
+### Visual proposto
 
 ```text
-+----------------------------------+
-|  Bem-vindo(a)!                   |
-|                                  |
-|  Nome: Gustavo Oliveira          |
-|  E-mail: gustavo@blank...       |
-|  Telefone: +55 85 99201-6488    |
-|                                  |
-|  Redirecionando...               |
-+----------------------------------+
+[=======-----]  3 vagas
+ (ocupadas)  (livres)
 ```
 
-## Detalhes tecnicos
-- O parsing do CSV ja existe; basta guardar a linha inteira quando encontrar o e-mail
-- O delay do redirect passa de 800ms para 1500ms para dar tempo de ler
-- Nenhuma dependencia nova necessaria
+- Barra com fundo cinza claro (border color)
+- Preenchimento com cor do foreground para as vagas ocupadas
+- Texto "X vagas" ao lado (ja existe)
+
+## Mudanca
+
+### Arquivo: `src/pages/SelectionPage.tsx`
+
+Substituir o bloco de bolinhas (linhas 127-135) por uma barra de progresso simples usando divs com largura percentual:
+
+- Container: `h-1.5 flex-1 rounded-full bg-border/50`
+- Preenchimento: `h-full rounded-full bg-foreground` com `width` calculado como `(taken/slots)*100%`
+- Se esgotado: barra com cor `bg-muted-foreground`
+
+Manter o texto de vagas restantes ao lado como esta hoje.
 
