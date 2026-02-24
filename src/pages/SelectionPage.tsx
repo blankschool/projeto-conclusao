@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useEntrepreneurs, useCreateSelection } from "@/hooks/useEntrepreneurs";
+import { ENTREPRENEURS } from "@/data/entrepreneurs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,19 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle, Instagram } from "lucide-react";
-import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { getPhotoByName } from "@/lib/entrepreneurPhotos";
-
-function formatFollowers(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
-  return String(n);
-}
-
-function extractHandle(url: string): string {
-  return url.replace(/https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "");
-}
 
 interface SelectionPageProps {
   userEmail: string;
@@ -30,42 +19,28 @@ interface SelectionPageProps {
 }
 
 export default function SelectionPage({ userEmail, onBack, onConfirmed }: SelectionPageProps) {
-  const { data: entrepreneurs = [], isLoading } = useEntrepreneurs();
-  const createSelection = useCreateSelection();
+  const [takenMap, setTakenMap] = useState<Record<number, number>>(() => {
+    const map: Record<number, number> = {};
+    ENTREPRENEURS.forEach((e) => { map[e.id] = e.taken; });
+    return map;
+  });
   const [popup, setPopup] = useState<number | null>(null);
   const [step, setStep] = useState<"info" | "preconfirm" | "confirmed">("info");
-  const [confirmedEntId, setConfirmedEntId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const entrepreneurs = ENTREPRENEURS.map((e) => ({ ...e, taken: takenMap[e.id] ?? e.taken }));
 
   const handleClosePopup = () => { setPopup(null); setStep("info"); };
   const handlePreConfirm = () => setStep("preconfirm");
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (popup === null) return;
     const ent = entrepreneurs[popup];
     setSubmitting(true);
-    try {
-      await createSelection(userEmail, ent.id);
-      setConfirmedEntId(ent.id);
-      onConfirmed(ent.id);
-    } catch (err: any) {
-      if (err?.code === "23505") {
-        toast.error("Você já está inscrito em um empresário.");
-      } else {
-        toast.error("Erro ao confirmar inscrição. Tente novamente.");
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    setTakenMap((prev) => ({ ...prev, [ent.id]: (prev[ent.id] ?? ent.taken) + 1 }));
+    onConfirmed(ent.id);
+    setSubmitting(false);
   };
-
-  if (isLoading) {
-    return (
-      <main className="max-w-[880px] mx-auto px-6 pt-12 pb-20 flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground text-sm">Carregando empresários...</p>
-      </main>
-    );
-  }
 
   const selectedEnt = popup !== null ? entrepreneurs[popup] : null;
 
@@ -120,17 +95,7 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
               })()}
               <div className="text-[17px] font-serif font-normal mb-1 text-foreground">{ent.name}</div>
               <div className="text-[13px] text-foreground font-medium mb-3">{ent.company}</div>
-              <div className="text-xs text-muted-foreground leading-relaxed mb-2">{ent.segment}</div>
-              {ent.instagram_url && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
-                  <Instagram className="w-3.5 h-3.5" />
-                  <span>@{extractHandle(ent.instagram_url)}</span>
-                  {ent.instagram_followers != null && (
-                    <span className="text-muted-foreground/70">· {formatFollowers(ent.instagram_followers)} seguidores</span>
-                  )}
-                </div>
-              )}
-              {!ent.instagram_url && <div className="mb-4" />}
+              <div className="text-xs text-muted-foreground leading-relaxed mb-4">{ent.segment}</div>
               <div className="flex justify-between items-center">
                 <div className="h-1.5 flex-1 rounded-full bg-border/50 overflow-hidden">
                   <div
@@ -171,21 +136,6 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
               <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                 {selectedEnt.bio}
               </p>
-
-              {selectedEnt.instagram_url && (
-                <a
-                  href={selectedEnt.instagram_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 mt-3 text-sm text-foreground hover:text-primary transition-colors"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>@{extractHandle(selectedEnt.instagram_url)}</span>
-                  {selectedEnt.instagram_followers != null && (
-                    <span className="text-muted-foreground text-xs">· {formatFollowers(selectedEnt.instagram_followers)} seguidores</span>
-                  )}
-                </a>
-              )}
 
               <div className="grid grid-cols-2 gap-3 mt-4 p-4 rounded-xl bg-muted/50 border border-border">
                 <div>

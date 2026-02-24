@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabase";
+
 
 interface AuthPageProps {
   onAuth: (email: string, existingEntrepreneurId?: number) => void;
@@ -44,17 +44,7 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
       }
       if (found) {
         setStatus("success");
-        // Check if user already has a selection
-        const { data: selection } = await supabase
-          .from("selections")
-          .select("entrepreneur_id")
-          .eq("email", email.trim().toLowerCase())
-          .maybeSingle();
-        if (selection?.entrepreneur_id) {
-          setTimeout(() => onAuth(email, selection.entrepreneur_id), 1500);
-        } else {
-          setTimeout(() => onAuth(email), 1500);
-        }
+        setTimeout(() => onAuth(email), 1500);
       } else {
         setStatus("error");
         setErrorMsg("E-mail não encontrado na base de alunos.");
