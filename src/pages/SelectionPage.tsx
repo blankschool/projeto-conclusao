@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { ENTREPRENEURS } from "@/data/entrepreneurs";
+import { useEntrepreneurs } from "@/hooks/useEntrepreneurs";
+import { useCreateSelection } from "@/hooks/useCreateSelection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -19,51 +21,51 @@ interface SelectionPageProps {
 }
 
 export default function SelectionPage({ userEmail, onBack, onConfirmed }: SelectionPageProps) {
-  const [takenMap, setTakenMap] = useState<Record<number, number>>(() => {
-    const map: Record<number, number> = {};
-    ENTREPRENEURS.forEach((e) => { map[e.id] = e.taken; });
-    return map;
-  });
+  const { data: entrepreneurs, isLoading } = useEntrepreneurs();
+  const createSelection = useCreateSelection();
   const [popup, setPopup] = useState<number | null>(null);
   const [step, setStep] = useState<"info" | "preconfirm" | "confirmed">("info");
-  const [submitting, setSubmitting] = useState(false);
-
-  const entrepreneurs = ENTREPRENEURS.map((e) => ({ ...e, taken: takenMap[e.id] ?? e.taken }));
 
   const handleClosePopup = () => { setPopup(null); setStep("info"); };
   const handlePreConfirm = () => setStep("preconfirm");
 
-  const handleConfirm = () => {
-    if (popup === null) return;
+  const handleConfirm = async () => {
+    if (popup === null || !entrepreneurs) return;
     const ent = entrepreneurs[popup];
-    setSubmitting(true);
-    setTakenMap((prev) => ({ ...prev, [ent.id]: (prev[ent.id] ?? ent.taken) + 1 }));
-    onConfirmed(ent.id);
-    setSubmitting(false);
+    try {
+      await createSelection.mutateAsync({ userEmail, entrepreneurId: ent.id });
+      onConfirmed(ent.id);
+    } catch (err) {
+      console.error("Selection failed:", err);
+    }
   };
 
-  const selectedEnt = popup !== null ? entrepreneurs[popup] : null;
+  const selectedEnt = popup !== null && entrepreneurs ? entrepreneurs[popup] : null;
+
+  if (isLoading) {
+    return (
+      <main className="max-w-[880px] mx-auto px-6 pt-12 pb-20">
+        <Skeleton className="h-8 w-64 mb-4" />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-2xl" />)}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-[880px] mx-auto px-6 pt-12 pb-20 relative">
       <div className="flex justify-between items-center mb-12 flex-wrap gap-4">
         <div>
-          <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-3">
-            Etapa 2 — seleção
-          </p>
-          <h2 className="text-[clamp(24px,4vw,36px)] font-normal tracking-tight text-foreground">
-            Escolha seu empresário
-          </h2>
+          <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-3">Etapa 2 — seleção</p>
+          <h2 className="text-[clamp(24px,4vw,36px)] font-normal tracking-tight text-foreground">Escolha seu empresário</h2>
           <p className="text-sm text-muted-foreground mt-2">Selecione um dos clientes Blank para produzir conteúdo.</p>
         </div>
-        <Badge variant="outline" className="text-muted-foreground">
-          {userEmail}
-        </Badge>
+        <Badge variant="outline" className="text-muted-foreground">{userEmail}</Badge>
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
-        {entrepreneurs.map((ent, i) => {
+        {entrepreneurs?.map((ent, i) => {
           const full = ent.taken >= ent.slots;
           const remaining = ent.slots - ent.taken;
           return (
@@ -71,24 +73,18 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
               key={ent.id}
               onClick={() => { if (!full) { setPopup(i); setStep("info"); } }}
               className={`p-7 rounded-2xl border transition-all relative overflow-hidden ${
-                full
-                  ? "bg-card/30 border-border/30 cursor-not-allowed opacity-45"
-                  : "bg-card border-border cursor-pointer hover:border-foreground/25"
+                full ? "bg-card/30 border-border/30 cursor-not-allowed opacity-45" : "bg-card border-border cursor-pointer hover:border-foreground/25"
               }`}
             >
               {full && (
-                <span className="absolute top-4 right-4 font-sans text-[9px] tracking-wider uppercase text-destructive bg-destructive/10 px-2.5 py-1 rounded-full">
-                  Esgotado
-                </span>
+                <span className="absolute top-4 right-4 font-sans text-[9px] tracking-wider uppercase text-destructive bg-destructive/10 px-2.5 py-1 rounded-full">Esgotado</span>
               )}
               {(() => {
                 const photo = getPhotoByName(ent.name);
                 return photo ? (
                   <img src={photo} alt={ent.name} className="w-12 h-12 rounded-xl object-cover mb-5" />
                 ) : (
-                  <div className={`w-12 h-12 rounded-xl border border-border flex items-center justify-center font-sans text-sm font-bold mb-5 ${
-                    full ? "bg-muted text-muted-foreground" : "bg-foreground/5 text-foreground"
-                  }`}>
+                  <div className={`w-12 h-12 rounded-xl border border-border flex items-center justify-center font-sans text-sm font-bold mb-5 ${full ? "bg-muted text-muted-foreground" : "bg-foreground/5 text-foreground"}`}>
                     {ent.avatar}
                   </div>
                 );
@@ -98,21 +94,15 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
               <div className="text-xs text-muted-foreground leading-relaxed mb-4">{ent.segment}</div>
               <div className="flex justify-between items-center">
                 <div className="h-1.5 flex-1 rounded-full bg-border/50 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${full ? "bg-muted-foreground" : "bg-foreground"}`}
-                    style={{ width: `${(ent.taken / ent.slots) * 100}%` }}
-                  />
+                  <div className={`h-full rounded-full transition-all ${full ? "bg-muted-foreground" : "bg-foreground"}`} style={{ width: `${(ent.taken / ent.slots) * 100}%` }} />
                 </div>
-                <span className="font-sans text-[10px] text-muted-foreground">
-                  {full ? "0 vagas" : `${remaining} ${remaining === 1 ? "vaga" : "vagas"}`}
-                </span>
+                <span className="font-sans text-[10px] text-muted-foreground">{full ? "0 vagas" : `${remaining} ${remaining === 1 ? "vaga" : "vagas"}`}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Detail / Confirm Dialog */}
       <Dialog open={popup !== null && step !== "confirmed"} onOpenChange={(open) => { if (!open) handleClosePopup(); }}>
         <DialogContent className="rounded-2xl max-w-md">
           {selectedEnt && step === "info" && (
@@ -123,20 +113,14 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
                   return photo ? (
                     <img src={photo} alt={selectedEnt.name} className="w-14 h-14 rounded-2xl object-cover mb-4" />
                   ) : (
-                    <div className="w-14 h-14 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-base font-bold text-foreground mb-4">
-                      {selectedEnt.avatar}
-                    </div>
+                    <div className="w-14 h-14 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-base font-bold text-foreground mb-4">{selectedEnt.avatar}</div>
                   );
                 })()}
                 <DialogTitle className="text-[22px] font-normal tracking-tight">{selectedEnt.name}</DialogTitle>
                 <div className="text-sm text-foreground font-medium">{selectedEnt.company}</div>
                 <Badge variant="outline" className="w-fit mt-1">{selectedEnt.segment}</Badge>
               </DialogHeader>
-
-              <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-                {selectedEnt.bio}
-              </p>
-
+              <p className="text-sm text-muted-foreground leading-relaxed mt-2">{selectedEnt.bio}</p>
               <div className="grid grid-cols-2 gap-3 mt-4 p-4 rounded-xl bg-muted/50 border border-border">
                 <div>
                   <div className="font-sans text-[10px] tracking-wider uppercase text-muted-foreground mb-1">Vagas totais</div>
@@ -147,14 +131,11 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
                   <div className="text-xl font-serif text-foreground">{selectedEnt.slots - selectedEnt.taken}</div>
                 </div>
               </div>
-
               <div className="flex gap-2.5 mt-4">
                 <Button onClick={handleClosePopup} variant="outline" className="flex-1 rounded-xl">Voltar</Button>
                 <Button onClick={handlePreConfirm} className="flex-[2] rounded-xl">Quero me inscrever</Button>
               </div>
-              <p className="text-[11px] text-muted-foreground text-center mt-3">
-                Você ainda poderá revisar antes de confirmar.
-              </p>
+              <p className="text-[11px] text-muted-foreground text-center mt-3">Você ainda poderá revisar antes de confirmar.</p>
             </>
           )}
 
@@ -169,20 +150,16 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
                   Ao confirmar, você será inscrito para produzir conteúdo para <strong className="text-foreground">{selectedEnt.name}</strong> da <strong className="text-foreground">{selectedEnt.company}</strong>.
                 </DialogDescription>
               </DialogHeader>
-
               <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/10 mt-2">
                 <div className="flex items-start gap-2.5">
                   <span className="text-destructive text-xs font-bold mt-0.5">!</span>
-                  <p className="text-[13px] text-destructive/80 leading-relaxed">
-                    Essa ação é irreversível. Após confirmar, não será possível trocar de empresário.
-                  </p>
+                  <p className="text-[13px] text-destructive/80 leading-relaxed">Essa ação é irreversível. Após confirmar, não será possível trocar de empresário.</p>
                 </div>
               </div>
-
               <div className="flex gap-2.5 mt-5">
                 <Button onClick={() => setStep("info")} variant="outline" className="flex-1 rounded-xl">Voltar</Button>
-                <Button onClick={handleConfirm} disabled={submitting} className="flex-[2] rounded-xl">
-                  {submitting ? "Confirmando..." : "Sim, confirmar inscrição"}
+                <Button onClick={handleConfirm} disabled={createSelection.isPending} className="flex-[2] rounded-xl">
+                  {createSelection.isPending ? "Confirmando..." : "Sim, confirmar inscrição"}
                 </Button>
               </div>
             </>
