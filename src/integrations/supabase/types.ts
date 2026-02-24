@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      calendar_events: {
+        Row: {
+          date: string
+          day: string
+          description: string
+          id: number
+          is_active: boolean
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          date: string
+          day: string
+          description: string
+          id?: number
+          is_active?: boolean
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          date?: string
+          day?: string
+          description?: string
+          id?: number
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      entrepreneurs: {
+        Row: {
+          avatar: string
+          bio: string
+          company: string
+          created_at: string | null
+          id: number
+          name: string
+          segment: string
+          slots: number
+          taken: number
+        }
+        Insert: {
+          avatar: string
+          bio: string
+          company: string
+          created_at?: string | null
+          id?: number
+          name: string
+          segment: string
+          slots?: number
+          taken?: number
+        }
+        Update: {
+          avatar?: string
+          bio?: string
+          company?: string
+          created_at?: string | null
+          id?: number
+          name?: string
+          segment?: string
+          slots?: number
+          taken?: number
+        }
+        Relationships: []
+      }
+      flow_steps: {
+        Row: {
+          description: string
+          id: number
+          sort_order: number
+          step_number: string
+          title: string
+        }
+        Insert: {
+          description: string
+          id?: number
+          sort_order?: number
+          step_number: string
+          title: string
+        }
+        Update: {
+          description?: string
+          id?: number
+          sort_order?: number
+          step_number?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      rules: {
+        Row: {
+          id: number
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          id?: number
+          sort_order?: number
+          text: string
+        }
+        Update: {
+          id?: number
+          sort_order?: number
+          text?: string
+        }
+        Relationships: []
+      }
+      selections: {
+        Row: {
+          created_at: string | null
+          entrepreneur_id: number
+          id: number
+          user_email: string
+        }
+        Insert: {
+          created_at?: string | null
+          entrepreneur_id: number
+          id?: number
+          user_email: string
+        }
+        Update: {
+          created_at?: string | null
+          entrepreneur_id?: number
+          id?: number
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selections_entrepreneur_id_fkey"
+            columns: ["entrepreneur_id"]
+            isOneToOne: false
+            referencedRelation: "entrepreneurs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
