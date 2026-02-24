@@ -1,103 +1,91 @@
 
 
-# Conectar dados ao Supabase
+# Modo Admin protegido por senha
 
 ## Visao geral
 
-Criar 4 tabelas no Supabase espelhando os dados estaticos atuais (`entrepreneurs`, `calendar_events`, `flow_steps`, `rules`) e uma tabela `selections` para registrar as escolhas dos alunos. Depois, atualizar as paginas para buscar os dados do Supabase em vez dos arrays locais.
+Criar uma rota `/admin` oculta (sem link visivel na interface) protegida por senha. Ao acessar, o admin ve um painel com abas para editar todas as tabelas do Supabase diretamente no app: empresarios, eventos do calendario, etapas do fluxo, regras e selecoes.
 
-## Tabelas a criar
+A senha sera verificada server-side via edge function para evitar que qualquer usuario inspecione o codigo e descubra a credencial.
+
+## Arquitetura
 
 ```text
-entrepreneurs
-─────────────────────────────────────────
-id            serial  PK
-name          text    NOT NULL
-company       text    NOT NULL
-segment       text    NOT NULL
-slots         integer NOT NULL DEFAULT 3
-taken         integer NOT NULL DEFAULT 0
-avatar        text    NOT NULL
-bio           text    NOT NULL
-created_at    timestamptz DEFAULT now()
-
-calendar_events
-─────────────────────────────────────────
-id            serial  PK
-date          text    NOT NULL
-day           text    NOT NULL
-title         text    NOT NULL
-description   text    NOT NULL
-is_active     boolean NOT NULL DEFAULT false
-sort_order    integer NOT NULL DEFAULT 0
-
-flow_steps
-─────────────────────────────────────────
-id            serial  PK
-step_number   text    NOT NULL
-title         text    NOT NULL
-description   text    NOT NULL
-sort_order    integer NOT NULL DEFAULT 0
-
-rules
-─────────────────────────────────────────
-id            serial  PK
-text          text    NOT NULL
-sort_order    integer NOT NULL DEFAULT 0
-
-selections
-─────────────────────────────────────────
-id            serial  PK
-user_email    text    NOT NULL
-entrepreneur_id integer NOT NULL REFERENCES entrepreneurs(id)
-created_at    timestamptz DEFAULT now()
+/admin (rota no React Router)
+   │
+   ├─ Tela de login com campo de senha
+   │     │
+   │     └─ Chama edge function "verify-admin-password"
+   │           └─ Compara com secret ADMIN_PASSWORD
+   │           └─ Retorna token JWT temporario
+   │
+   └─ Painel admin (apos autenticado)
+        ├─ Aba: Empresarios (CRUD inline)
+        ├─ Aba: Calendario (editar eventos)
+        ├─ Aba: Etapas do fluxo (editar steps)
+        ├─ Aba: Regras (editar textos)
+        └─ Aba: Selecoes (visualizar/deletar)
 ```
 
-## Politicas de acesso (RLS)
+## Mudancas
 
-- **entrepreneurs, calendar_events, flow_steps, rules**: RLS habilitado com politica de leitura publica (`SELECT` para `anon`). Somente voce edita via dashboard.
-- **selections**: RLS habilitado com politica de `INSERT` e `SELECT` publica (os alunos nao fazem login via Supabase Auth, apenas validam email contra planilha Google).
+### 1. Edge function `verify-admin-password`
 
-## Dados iniciais
+- Recebe `{ password }` no body
+- Compara com a secret `ADMIN_PASSWORD` configurada no Supabase
+- Se correto, retorna `{ ok: true }` (a sessao admin fica em sessionStorage)
+- Se incorreto, retorna 401
 
-Apos criar as tabelas, inserir os dados atuais de `src/data/entrepreneurs.ts` nas respectivas tabelas usando INSERT.
+### 2. Secret `ADMIN_PASSWORD`
 
-## Mudancas no codigo
+- Configurar um secret no Supabase com a senha desejada
 
-### 1. Criar hooks de dados
+### 3. RLS: permitir operacoes de escrita
 
-Criar hooks com `@tanstack/react-query` para buscar dados de cada tabela:
-- `src/hooks/useEntrepreneurs.ts` — busca `entrepreneurs` ordenado por `id`
-- `src/hooks/useCalendarEvents.ts` — busca `calendar_events` ordenado por `sort_order`
-- `src/hooks/useFlowSteps.ts` — busca `flow_steps` ordenado por `sort_order`
-- `src/hooks/useRules.ts` — busca `rules` ordenado por `sort_order`
-- `src/hooks/useCreateSelection.ts` — mutacao para inserir em `selections` e incrementar `taken`
+As tabelas `calendar_events`, `flow_steps` e `rules` atualmente so permitem SELECT. Para o admin editar, sera necessario adicionar politicas de INSERT, UPDATE e DELETE. Como nao ha autenticacao Supabase (o admin valida por senha custom), as politicas serao abertas para `anon` nessas operacoes (ja que a protecao esta na camada da aplicacao via senha).
 
-### 2. `src/pages/ExplanationPage.tsx`
-- Substituir imports estaticos pelos hooks
-- Adicionar loading states simples
-- Mapear campos: `step_number`, `description`, `is_active`
+Alternativamente, usar a service role key na edge function para bypass de RLS -- esta e a abordagem mais segura e sera a adotada.
 
-### 3. `src/pages/SelectionPage.tsx`
-- Buscar empresarios via `useEntrepreneurs`
-- Na confirmacao, chamar `useCreateSelection` que insere em `selections` e atualiza `taken` no banco
-- Antes de exibir, checar se o email ja tem selecao existente
+**Abordagem escolhida**: Criar uma edge function `admin-db` que recebe operacoes CRUD e usa a `SUPABASE_SERVICE_ROLE_KEY` (ja configurada) para executar as queries, bypassando RLS. Assim as politicas RLS restritivas permanecem intactas para usuarios normais.
 
-### 4. `src/pages/AuthPage.tsx`
-- Apos validar email na planilha, consultar `selections` no Supabase para verificar se ja escolheu empresario
-- Se sim, redirecionar direto para o perfil
+### 4. Edge function `admin-db`
 
-### 5. `src/pages/EntrepreneurProfilePage.tsx`
-- Buscar empresario e eventos do calendario via hooks
+- Protegida pela mesma verificacao de senha
+- Recebe operacoes: `{ password, table, action, data, id }`
+- Actions: `list`, `insert`, `update`, `delete`
+- Usa service role key para acessar o banco
+- Tabelas permitidas: `entrepreneurs`, `calendar_events`, `flow_steps`, `rules`, `selections`
 
-### 6. Manter fallback
-- O arquivo `src/data/entrepreneurs.ts` permanece como referencia, mas nao sera mais importado nas paginas
+### 5. Nova pagina `src/pages/AdminPage.tsx`
+
+- Campo de senha, salva em sessionStorage apos validacao
+- Tabs com as 5 tabelas
+- Cada tab mostra uma tabela editavel com botoes de salvar/deletar/adicionar
+- Interface simples e funcional, sem necessidade de design elaborado
+
+### 6. Hooks admin
+
+- `src/hooks/useAdminAuth.ts` — gerencia estado de autenticacao admin (sessionStorage)
+- `src/hooks/useAdminData.ts` — hook generico para CRUD via edge function
+
+### 7. `src/App.tsx`
+
+- Adicionar rota `/admin` apontando para `AdminPage`
+
+### 8. Nao adicionar link visivel
+
+- A rota `/admin` so e acessivel digitando a URL diretamente
+- Nenhum link ou botao visivel na interface do usuario
 
 ## Detalhes tecnicos
 
-A confirmacao de selecao fara duas operacoes:
-1. `INSERT INTO selections (user_email, entrepreneur_id)`
-2. Atualizar `taken` no empresario via RPC ou update direto
+A edge function `admin-db` centraliza todas as operacoes. Cada request inclui a senha no header `x-admin-password`. A funcao valida a senha contra o secret e, se correto, executa a operacao usando `createClient` com a service role key.
 
-Como nao ha autenticacao Supabase (apenas validacao por planilha Google), as politicas RLS serao abertas para `anon` nas operacoes necessarias.
+Tabelas editaveis e campos:
+
+- **entrepreneurs**: name, company, segment, bio, avatar, slots, taken
+- **calendar_events**: date, day, title, description, is_active, sort_order
+- **flow_steps**: step_number, title, description, sort_order
+- **rules**: text, sort_order
+- **selections**: visualizacao + delete apenas
 
