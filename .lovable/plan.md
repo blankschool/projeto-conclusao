@@ -1,23 +1,42 @@
 
 
-# Atualizar documentos da Renata Vichi
+# Popup de Confidencialidade obrigatório ao acessar perfil do empresário
 
-## Problema
-Os links atuais no campo `materiais_extras` da Renata (id=8) apontam para URLs do Notion com `expirationTimestamp`, que expiram e deixam de funcionar.
+## Resumo
+Criar um popup (AlertDialog) de termo de confidencialidade que aparece na primeira vez que o usuário acessa qualquer perfil de empresário. O aceite é registrado no banco de dados. Nas visitas seguintes, o popup não aparece.
 
-## Solução
+## Alterações no banco de dados
 
-1. **Copiar os PDFs para `public/documents/`** para que fiquem acessíveis permanentemente via URL da aplicação:
-   - `public/documents/Midia_Kit_Renata_Vichi_2026.pdf`
-   - `public/documents/Podcasts_Renata_Vichi.pdf`
+1. **Nova tabela `confidentiality_agreements`**:
+   - `id` (serial, PK)
+   - `user_email` (text, NOT NULL)
+   - `accepted_at` (timestamptz, default now())
+   - Constraint UNIQUE em `user_email` (aceite é global, uma vez por usuário)
+   - RLS: SELECT e INSERT públicos (mesmo padrão das outras tabelas)
 
-2. **Atualizar o campo `materiais_extras`** (id=8) no banco, trocando os links do Notion pelos novos caminhos relativos ao domínio publicado:
-   - `https://projeto-conclusao.lovable.app/documents/Midia_Kit_Renata_Vichi_2026.pdf`
-   - `https://projeto-conclusao.lovable.app/documents/Podcasts_Renata_Vichi.pdf`
+## Alterações no código
 
-## Detalhes técnicos
-- Tabela: `public.entrepreneurs`, registro `id = 8`
-- Campo: `materiais_extras`
-- Método: UPDATE via insert tool (não é alteração de schema)
-- Os PDFs serão servidos diretamente pelo Vite/build como assets estáticos
+2. **Novo hook `useConfidentialityAgreement.ts`**:
+   - Query: verifica se existe registro em `confidentiality_agreements` para o `userEmail`
+   - Mutation: insere registro quando o usuário aceita
+
+3. **Componente de popup em `EntrepreneurProfilePage.tsx`**:
+   - Usar `AlertDialog` (sem botão de fechar, forçando interação)
+   - Abrir automaticamente quando `userEmail` não tem registro na tabela
+   - Checkbox "Declaro que li e concordo" obrigatório para habilitar o botão "Concordo e acessar"
+   - Botão "Cancelar" volta à página anterior (`onBack`)
+   - Ao aceitar: insere na tabela e fecha o popup, liberando o conteúdo
+   - Enquanto o popup está aberto, o conteúdo do perfil fica escondido/bloqueado atrás do overlay
+
+## Conteúdo do popup
+Título, texto completo das regras de confidencialidade e penalidades conforme especificado pelo usuário.
+
+## Fluxo
+```text
+Usuário acessa perfil
+  ├─ Já aceitou? → mostra perfil normalmente
+  └─ Não aceitou? → AlertDialog bloqueante
+       ├─ "Concordo e acessar" (+ checkbox) → INSERT → fecha popup → mostra perfil
+       └─ "Cancelar" → volta à página anterior
+```
 
