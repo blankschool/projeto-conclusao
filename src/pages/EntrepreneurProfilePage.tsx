@@ -91,12 +91,6 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
         </div>
       </div>
 
-      <section className="mb-8">
-        <p className="font-sans text-[15px] tracking-[0.18em] uppercase text-muted-foreground mb-4 font-medium">Links úteis</p>
-        <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-      </section>
-
-      <Separator className="mb-8" />
 
       <ProfileSection label="História" content={ent.bio} />
       <ProfileSection label="Posicionamento" content={(ent as any).posicionamento} />
