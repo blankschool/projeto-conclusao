@@ -12,12 +12,45 @@ interface EntrepreneurProfilePageProps {
   onBack: () => void;
 }
 
+function renderTextWithLinks(text: string) {
+  const urlRegex = /(https?:\/\/[^\s)]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) =>
+    urlRegex.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary underline underline-offset-2 hover:text-primary/80 break-all"
+      >
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
+function ProfileSection({ label, content, withLinks = false }: { label: string; content?: string | null; withLinks?: boolean }) {
+  return (
+    <section className="mb-10">
+      <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">{label}</p>
+      {content ? (
+        <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-line">
+          {withLinks ? renderTextWithLinks(content) : content}
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground italic">Informações em breve</p>
+      )}
+    </section>
+  );
+}
+
 export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: EntrepreneurProfilePageProps) {
   const { data: entrepreneurs, isLoading: loadingEnt } = useEntrepreneurs();
-  const { data: calendarEvents } = useCalendarEvents();
 
   const ent = entrepreneurs?.find((e) => e.id === entrepreneurId);
-  const selectionDate = calendarEvents && calendarEvents.length >= 2 ? calendarEvents[1].date : "em breve";
 
   if (loadingEnt) {
     return (
@@ -65,30 +98,11 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
 
       <Separator className="mb-8" />
 
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">História</p>
-        <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-line">{ent.bio}</p>
-      </section>
-
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Posicionamento</p>
-        <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-      </section>
-
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Tom de voz</p>
-        <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-      </section>
-
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Editorias</p>
-        <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-      </section>
-
-      <section className="mb-10">
-        <p className="font-sans text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Materiais extras</p>
-        <p className="text-sm text-muted-foreground italic">Informações em breve</p>
-      </section>
+      <ProfileSection label="História" content={ent.bio} />
+      <ProfileSection label="Posicionamento" content={(ent as any).posicionamento} />
+      <ProfileSection label="Tom de voz" content={(ent as any).tom_de_voz} />
+      <ProfileSection label="Editorias" content={(ent as any).editorias} />
+      <ProfileSection label="Materiais extras" content={(ent as any).materiais_extras} withLinks />
 
       <Separator className="mb-8" />
 

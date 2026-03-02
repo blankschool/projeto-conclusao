@@ -50,33 +50,45 @@ export type Database = {
           bio: string
           company: string
           created_at: string | null
+          editorias: string | null
           id: number
+          materiais_extras: string | null
           name: string
+          posicionamento: string | null
           segment: string
           slots: number
           taken: number
+          tom_de_voz: string | null
         }
         Insert: {
           avatar: string
           bio: string
           company: string
           created_at?: string | null
+          editorias?: string | null
           id?: number
+          materiais_extras?: string | null
           name: string
+          posicionamento?: string | null
           segment: string
           slots?: number
           taken?: number
+          tom_de_voz?: string | null
         }
         Update: {
           avatar?: string
           bio?: string
           company?: string
           created_at?: string | null
+          editorias?: string | null
           id?: number
+          materiais_extras?: string | null
           name?: string
+          posicionamento?: string | null
           segment?: string
           slots?: number
           taken?: number
+          tom_de_voz?: string | null
         }
         Relationships: []
       }

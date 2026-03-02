@@ -12,7 +12,7 @@ import { Pencil, Trash2, Plus, Save, X, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const TABLE_COLUMNS: Record<string, string[]> = {
-  entrepreneurs: ["name", "company", "segment", "bio", "avatar", "slots", "taken"],
+  entrepreneurs: ["name", "company", "segment", "bio", "avatar", "slots", "taken", "posicionamento", "tom_de_voz", "editorias", "materiais_extras"],
   calendar_events: ["date", "day", "title", "description", "is_active", "sort_order"],
   flow_steps: ["step_number", "title", "description", "sort_order"],
   rules: ["text", "sort_order"],
