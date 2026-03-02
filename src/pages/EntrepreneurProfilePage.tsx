@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { useEntrepreneurs } from "@/hooks/useEntrepreneurs";
 import { useCreateSubmission } from "@/hooks/useCreateSubmission";
 import { useExistingSubmission } from "@/hooks/useExistingSubmission";
+import { useConfidentialityAgreement } from "@/hooks/useConfidentialityAgreement";
 import { getPhotoByName } from "@/lib/entrepreneurPhotos";
+import ConfidentialityDialog from "@/components/ConfidentialityDialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +60,7 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
   const { data: entrepreneurs, isLoading: loadingEnt } = useEntrepreneurs();
   const submission = useCreateSubmission();
   const { data: alreadySubmitted } = useExistingSubmission(entrepreneurId, userEmail);
+  const { hasAccepted, isLoading: loadingAgreement, accept, isAccepting } = useConfidentialityAgreement(userEmail);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [link, setLink] = useState("");
@@ -70,7 +73,7 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
     if (alreadySubmitted) setSubmitted(true);
   }, [alreadySubmitted]);
 
-  if (loadingEnt) {
+  if (loadingEnt || loadingAgreement) {
     return (
       <main className="max-w-[680px] mx-auto px-6 pt-12 pb-20">
         <Skeleton className="h-20 w-full rounded-2xl mb-10" />
@@ -91,6 +94,13 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
   const photo = getPhotoByName(ent.name);
 
   return (
+    <>
+      <ConfidentialityDialog
+        open={!hasAccepted}
+        onAccept={() => accept()}
+        onCancel={onBack}
+        isAccepting={isAccepting}
+      />
     <main className="max-w-[680px] mx-auto px-6 pt-12 pb-20">
       <button onClick={onBack} className="flex items-center gap-1.5 text-muted-foreground text-sm mb-10 hover:text-foreground transition-colors">
         <ArrowLeft className="w-4 h-4" /> Voltar ao início
@@ -211,5 +221,6 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
         <Button onClick={onBack} variant="outline" className="rounded-xl">Voltar ao início</Button>
       </div>
     </main>
+    </>
   );
 }
