@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useEntrepreneurs } from "@/hooks/useEntrepreneurs";
 import { useCreateSubmission } from "@/hooks/useCreateSubmission";
+import { useExistingSubmission } from "@/hooks/useExistingSubmission";
 import { getPhotoByName } from "@/lib/entrepreneurPhotos";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -56,6 +57,7 @@ export function ProfileSection({ label, content, withLinks = false }: { label: s
 export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onBack }: EntrepreneurProfilePageProps) {
   const { data: entrepreneurs, isLoading: loadingEnt } = useEntrepreneurs();
   const submission = useCreateSubmission();
+  const { data: alreadySubmitted } = useExistingSubmission(entrepreneurId, userEmail);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [link, setLink] = useState("");
@@ -63,6 +65,10 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
   const [observations, setObservations] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const ent = entrepreneurs?.find((e) => e.id === entrepreneurId);
+
+  useEffect(() => {
+    if (alreadySubmitted) setSubmitted(true);
+  }, [alreadySubmitted]);
 
   if (loadingEnt) {
     return (
@@ -117,8 +123,7 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
         <div className="text-center py-8">
           <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
           <p className="text-[15px] font-medium text-foreground mb-1">Conteúdo enviado com sucesso!</p>
-          <p className="text-[13px] text-muted-foreground mb-6">Você pode enviar novamente se precisar.</p>
-          <Button variant="outline" className="rounded-xl" onClick={() => { setSubmitted(false); setLink(""); setFile(null); setObservations(""); }}>Enviar outro conteúdo</Button>
+          <p className="text-[13px] text-muted-foreground">Seu conteúdo foi registrado e está em análise.</p>
         </div>
       ) : (
         <section className="mb-10">
