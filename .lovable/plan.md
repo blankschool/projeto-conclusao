@@ -1,16 +1,16 @@
 
 
-# Atualizar dados da Natalia Beauty no banco de dados
+# Atualizar dados do Rony Meisler no banco de dados
 
 ## Mudança
 
-Atualizar o registro `id = 10` na tabela `entrepreneurs` com:
+Atualizar o registro `id = 7` na tabela `entrepreneurs` com:
 
-- **bio**: História completa (origem, trajetória profissional, momento pessoal marcante, vida pessoal)
-- **posicionamento**: Posicionamento central, público, pilares e propósito
-- **tom_de_voz**: Tom conversacional, características de linguagem, o que evitar
-- **editorias**: Beleza, Independência, Escala (Negócios)
-- **materiais_extras**: Link da palestra no Google Drive + links dos podcasts no YouTube
+- **`bio`**: História completa — origem, criação da Reserva, crescimento, venda para Arezzo&Co, fase atual como investidor/mentor/palestrante, vida pessoal
+- **`posicionamento`**: Filosofia de construção empresarial com perenidade, missão de formar fundadores, tese de cultura + canal + margem + reputação + gente
+- **`tom_de_voz`**: Descontraído, irreverente, direto, humor irônico, "jeitinho carioca", conversacional, analítico por trás da descontração
+- **`editorias`**: 4 linhas macro (Clareza estrutural, Vocação simbólica, Formação de donos, Curadoria de excelência) + editorias do perfil (Presença cultural, Caixa de ferramentas do founder, Curadoria de excelência)
+- **`materiais_extras`**: Newsletter BOB (Business of Brands, 40mil+ inscritos) + link Rebels Ventures
 
-Será executado via insert tool com `UPDATE` no registro `id = 10`.
+Será executado via insert tool com `UPDATE` no registro `id = 7`.
 
