@@ -1,23 +1,21 @@
 
 
-# Atualizar dados da Sandra Chayo no banco de dados
+# Remover formatação Markdown dos dados da Renata Vichi
 
-## Mudança
+## Problema
+Os campos `bio`, `posicionamento`, `tom_de_voz` e `editorias` da Renata (id=8) contêm headers Markdown (`##`) que aparecem como texto cru na interface.
 
-Atualizar o registro `id = 9` na tabela `entrepreneurs` com:
+## Solução
+Executar um `UPDATE` via migration SQL no registro `id = 8` da tabela `entrepreneurs`, removendo todos os `##` e substituindo por texto limpo com quebras de linha adequadas. Os títulos de seção serão mantidos em texto simples (ex: "Origem", "Trajetória profissional") seguidos de quebra de linha, sem marcação Markdown.
 
-- **`bio`**: História completa -- origem familiar (Nissim Hara, imigrante, fundador da Hope em 1966), formação em Arquitetura pela FAAP, entrada na empresa familiar, revolução com franquias/e-commerce/branding, Grupo HOPE (270+ lojas), Shark Tank Brasil, podcast Papo Íntimo, vida pessoal (mãe, vegana, ativista judaica)
-- **`posicionamento`**: Marca pessoal que une coragem, legado, sensibilidade e visão estratégica; traduz identidade de marca em atitude; defende marcas com alma e liderança feminina; combate superficialidade e fórmulas prontas
-- **`tom_de_voz`**: Elegante e firme, sutilmente provocadora, afetiva com conteúdo; evitar linguagem fria, jargões, tom motivacional forçado ou clichês vazios
-- **`editorias`**: 4 editorias (Branding, Liderança e Lifestyle, Cultura e Valores, Institucional)
-- **`materiais_extras`**: Podcast Papo Íntimo (YouTube) + Hope Lingerie + Hope Resort
-
-Será executado via insert tool com `UPDATE` no registro `id = 9`.
+## Campos afetados
+- **`bio`**: Remover `## Origem`, `## Trajetória profissional`, `## Momento pessoal marcante`, `## Vida pessoal`
+- **`posicionamento`**: Remover `## Quem ela é para o mercado`, `## Diferencial central`, `## Missão declarada`, `## Antagonistas do posicionamento`
+- **`tom_de_voz`**: Remover `## Características centrais`, `## Vocabulário característico`, `## Linguagem`, `## O que evitar absolutamente` e `**` bold markers
+- **`editorias`**: Remover `## 1.`, `## 2.`, etc.
 
 ## Detalhes técnicos
-
-- Tabela: `public.entrepreneurs`
-- Registro: `id = 9`
-- Ferramenta: insert tool (data operation, não migration)
-- Campos: `bio`, `posicionamento`, `tom_de_voz`, `editorias`, `materiais_extras`
+- Tabela: `public.entrepreneurs`, registro `id = 8`
+- Método: Migration SQL com `UPDATE`
+- Todo o conteúdo textual será preservado, apenas a sintaxe Markdown será removida
 
