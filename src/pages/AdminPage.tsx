@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminList, useAdminMutation } from "@/hooks/useAdminData";
+import { ProfileSection, renderTextWithLinks } from "@/pages/EntrepreneurProfilePage";
+import { getPhotoByName } from "@/lib/entrepreneurPhotos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, Save, X, LogOut } from "lucide-react";
+import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const TABLE_COLUMNS: Record<string, string[]> = {
@@ -217,6 +221,69 @@ function AdminTable({ table, password }: { table: string; password: string }) {
   );
 }
 
+function AdminProfiles({ password }: { password: string }) {
+  const { data: rows, isLoading } = useAdminList("entrepreneurs", password);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  if (isLoading) return <p className="p-4 text-muted-foreground">Carregando...</p>;
+
+  const entrepreneurs = (rows as Record<string, unknown>[]) || [];
+  const selected = selectedId !== null ? entrepreneurs.find((e) => e.id === selectedId) : null;
+
+  if (selected) {
+    const photo = getPhotoByName(String(selected.name));
+    return (
+      <div className="max-w-[720px] mx-auto">
+        <button onClick={() => setSelectedId(null)} className="flex items-center gap-1.5 text-muted-foreground text-sm mb-8 hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Voltar à lista
+        </button>
+        <div className="flex items-start gap-5 mb-8">
+          {photo ? (
+            <img src={photo} alt={String(selected.name)} className="w-16 h-16 rounded-2xl object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-lg font-bold text-foreground flex-shrink-0">{String(selected.avatar)}</div>
+          )}
+          <div>
+            <h2 className="text-xl font-medium text-foreground">{String(selected.name)}</h2>
+            <p className="text-sm text-foreground/70">{String(selected.company)}</p>
+            <Badge variant="outline" className="mt-1">{String(selected.segment)}</Badge>
+          </div>
+        </div>
+        <Separator className="mb-8" />
+        <ProfileSection label="História" content={selected.bio as string} />
+        <ProfileSection label="Posicionamento" content={selected.posicionamento as string} />
+        <ProfileSection label="Tom de voz" content={selected.tom_de_voz as string} />
+        <ProfileSection label="Editorias" content={selected.editorias as string} />
+        <ProfileSection label="Materiais extras" content={selected.materiais_extras as string} withLinks />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {entrepreneurs.map((ent) => {
+        const photo = getPhotoByName(String(ent.name));
+        return (
+          <Card key={ent.id as number} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedId(ent.id as number)}>
+            <CardContent className="p-4 flex items-center gap-4">
+              {photo ? (
+                <img src={photo} alt={String(ent.name)} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-12 h-12 rounded-xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-sm font-bold text-foreground flex-shrink-0">{String(ent.avatar)}</div>
+              )}
+              <div className="min-w-0">
+                <p className="font-medium text-foreground truncate">{String(ent.name)}</p>
+                <p className="text-sm text-muted-foreground truncate">{String(ent.company)}</p>
+                <Badge variant="outline" className="mt-1 text-xs">{String(ent.segment)}</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { isAuthenticated, password, verify, logout, isVerifying, error } = useAdminAuth();
 
@@ -232,14 +299,18 @@ export default function AdminPage() {
           <LogOut className="h-4 w-4 mr-1" /> Sair
         </Button>
       </div>
-      <Tabs defaultValue="entrepreneurs">
+      <Tabs defaultValue="profiles">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="profiles">Perfis</TabsTrigger>
           {TABLES.map((t) => (
             <TabsTrigger key={t} value={t} className="capitalize">
               {t.replace("_", " ")}
             </TabsTrigger>
           ))}
         </TabsList>
+        <TabsContent value="profiles">
+          <AdminProfiles password={password!} />
+        </TabsContent>
         {TABLES.map((t) => (
           <TabsContent key={t} value={t}>
             <AdminTable table={t} password={password!} />

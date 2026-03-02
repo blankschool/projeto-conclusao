@@ -18,7 +18,7 @@ interface EntrepreneurProfilePageProps {
   onBack: () => void;
 }
 
-function renderTextWithLinks(text: string) {
+export function renderTextWithLinks(text: string) {
   const urlRegex = /(https?:\/\/[^\s)]+)/g;
   const parts = text.split(urlRegex);
   return parts.map((part, i) =>
@@ -38,7 +38,7 @@ function renderTextWithLinks(text: string) {
   );
 }
 
-function ProfileSection({ label, content, withLinks = false }: { label: string; content?: string | null; withLinks?: boolean }) {
+export function ProfileSection({ label, content, withLinks = false }: { label: string; content?: string | null; withLinks?: boolean }) {
   return (
     <section className="mb-10">
       <p className="font-sans text-[15px] tracking-[0.18em] uppercase text-muted-foreground mb-4 font-medium">{label}</p>
