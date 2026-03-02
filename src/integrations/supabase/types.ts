@@ -44,6 +44,24 @@ export type Database = {
         }
         Relationships: []
       }
+      confidentiality_agreements: {
+        Row: {
+          accepted_at: string
+          id: number
+          user_email: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: number
+          user_email: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: number
+          user_email?: string
+        }
+        Relationships: []
+      }
       entrepreneurs: {
         Row: {
           avatar: string
