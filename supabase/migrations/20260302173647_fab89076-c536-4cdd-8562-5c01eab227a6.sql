@@ -1,0 +1,2 @@
+UPDATE entrepreneurs SET materiais_extras = '- Mídia Kit Renata Vichi 2026: https://projeto-conclusao.lovable.app/documents/Midia_Kit_Renata_Vichi_2026.pdf
+- Podcasts Renata Vichi: https://projeto-conclusao.lovable.app/documents/Podcasts_Renata_Vichi.pdf' WHERE id = 8;
