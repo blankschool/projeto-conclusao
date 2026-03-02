@@ -1,27 +1,47 @@
 
 
-# Reestruturar pagina de perfil do empresario
+# Preencher perfil detalhado do Tallis
 
-## O que muda
+## Visao geral
 
-Remover o blur e o overlay de bloqueio. Substituir as secoes atuais ("Sobre", "Diretrizes", "Referencias") pelas novas secoes solicitadas:
+Adicionar 4 novas colunas na tabela `entrepreneurs` para armazenar o conteudo das secoes do perfil (posicionamento, tom_de_voz, editorias, materiais_extras). Preencher os dados do Tallis via UPDATE. Atualizar a pagina de perfil para exibir o conteudo dessas colunas quando preenchido, e atualizar o admin para permitir edicao.
 
-1. **Historia** — texto do campo `bio` do empresario
-2. **Posicionamento** — placeholder "Informacoes em breve"
-3. **Tom de voz** — placeholder "Informacoes em breve"
-4. **Editorias** — placeholder "Informacoes em breve"
-5. **Materiais extras** — placeholder "Informacoes em breve"
+## Mudancas
 
-Manter o header (foto, nome, empresa, segmento), a secao de "Links uteis", e o rodape com botao de voltar. Tudo visivel sem blur.
+### 1. Migracao: adicionar 4 colunas
 
-## Mudancas no codigo
+```sql
+ALTER TABLE entrepreneurs
+  ADD COLUMN posicionamento text,
+  ADD COLUMN tom_de_voz text,
+  ADD COLUMN editorias text,
+  ADD COLUMN materiais_extras text;
+```
 
-### `src/pages/EntrepreneurProfilePage.tsx`
+Todas nullable — quando vazias, exibem o placeholder "Informacoes em breve".
 
-- Remover o wrapper `div.relative` com blur e o overlay com `Lock`
-- Remover import de `Lock`
-- Substituir as secoes blurradas por 5 secoes claras: Historia (usando `ent.bio`), Posicionamento, Tom de voz, Editorias, Materiais extras
-- Cada secao com o mesmo estilo de label uppercase + conteudo
-- Manter separadores entre grupos de secoes
-- Manter o rodape com texto de prazo e botao de voltar
+### 2. Inserir dados do Tallis
+
+UPDATE na tabela `entrepreneurs` onde `name = 'Tallis Gomes'` preenchendo:
+- `bio` com o texto completo da secao Historia (Origem + Trajetoria + Transformacao + Vida pessoal)
+- `posicionamento` com o texto completo
+- `tom_de_voz` com o texto completo
+- `editorias` com as 7 editorias
+- `materiais_extras` com todos os links e informacoes extras
+
+O conteudo sera armazenado como texto com quebras de linha. Links ficam em texto puro (a pagina os renderizara como clicaveis).
+
+### 3. `src/pages/EntrepreneurProfilePage.tsx`
+
+- Nas secoes Posicionamento, Tom de voz, Editorias e Materiais extras: exibir o conteudo da coluna correspondente quando preenchido, ou manter o placeholder
+- Na secao Materiais extras: detectar URLs no texto e renderiza-las como links clicaveis
+- O texto usa `whitespace-pre-line` para respeitar quebras de linha
+
+### 4. `src/pages/AdminPage.tsx`
+
+- Adicionar as 4 novas colunas a lista de colunas editaveis de `entrepreneurs`
+
+### 5. Tipos Supabase
+
+O arquivo `types.ts` sera atualizado automaticamente apos a migracao.
 
