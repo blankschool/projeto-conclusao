@@ -35,7 +35,7 @@ function renderTextWithLinks(text: string) {
 function ProfileSection({ label, content, withLinks = false }: { label: string; content?: string | null; withLinks?: boolean }) {
   return (
     <section className="mb-10">
-      <p className="font-sans text-[13px] tracking-[0.2em] uppercase text-muted-foreground mb-4">{label}</p>
+      <p className="font-sans text-[15px] tracking-[0.18em] uppercase text-muted-foreground mb-4 font-medium">{label}</p>
       {content ? (
         <p className="text-[15px] text-foreground/80 leading-relaxed whitespace-pre-line">
           {withLinks ? renderTextWithLinks(content) : content}
@@ -92,7 +92,7 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
       </div>
 
       <section className="mb-8">
-        <p className="font-sans text-[13px] tracking-[0.2em] uppercase text-muted-foreground mb-4">Links úteis</p>
+        <p className="font-sans text-[15px] tracking-[0.18em] uppercase text-muted-foreground mb-4 font-medium">Links úteis</p>
         <p className="text-sm text-muted-foreground italic">Informações em breve</p>
       </section>
 
