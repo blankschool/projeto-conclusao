@@ -46,6 +46,7 @@ const Index = () => {
       {page === "profile" && confirmedEntId && (
         <EntrepreneurProfilePage
           entrepreneurId={confirmedEntId}
+          userEmail={userEmail}
           onBack={() => { setPage("explanation"); setUserEmail(""); setConfirmedEntId(null); }}
         />
       )}

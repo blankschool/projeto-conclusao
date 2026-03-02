@@ -163,6 +163,47 @@ export type Database = {
           },
         ]
       }
+      submissions: {
+        Row: {
+          created_at: string | null
+          entrepreneur_id: number
+          file_name: string | null
+          file_url: string | null
+          id: number
+          link: string | null
+          observations: string | null
+          user_email: string
+        }
+        Insert: {
+          created_at?: string | null
+          entrepreneur_id: number
+          file_name?: string | null
+          file_url?: string | null
+          id?: number
+          link?: string | null
+          observations?: string | null
+          user_email: string
+        }
+        Update: {
+          created_at?: string | null
+          entrepreneur_id?: number
+          file_name?: string | null
+          file_url?: string | null
+          id?: number
+          link?: string | null
+          observations?: string | null
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_entrepreneur_id_fkey"
+            columns: ["entrepreneur_id"]
+            isOneToOne: false
+            referencedRelation: "entrepreneurs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

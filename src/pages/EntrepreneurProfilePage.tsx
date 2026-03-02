@@ -1,14 +1,20 @@
+import { useState, useRef } from "react";
 import { useEntrepreneurs } from "@/hooks/useEntrepreneurs";
-import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import { useCreateSubmission } from "@/hooks/useCreateSubmission";
 import { getPhotoByName } from "@/lib/entrepreneurPhotos";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Upload, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EntrepreneurProfilePageProps {
   entrepreneurId: number;
+  userEmail: string;
   onBack: () => void;
 }
 
@@ -47,9 +53,15 @@ function ProfileSection({ label, content, withLinks = false }: { label: string; 
   );
 }
 
-export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: EntrepreneurProfilePageProps) {
+export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onBack }: EntrepreneurProfilePageProps) {
   const { data: entrepreneurs, isLoading: loadingEnt } = useEntrepreneurs();
-
+  const submission = useCreateSubmission();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [link, setLink] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [observations, setObservations] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const ent = entrepreneurs?.find((e) => e.id === entrepreneurId);
 
   if (loadingEnt) {
@@ -97,6 +109,95 @@ export default function EntrepreneurProfilePage({ entrepreneurId, onBack }: Entr
       <ProfileSection label="Tom de voz" content={(ent as any).tom_de_voz} />
       <ProfileSection label="Editorias" content={(ent as any).editorias} />
       <ProfileSection label="Materiais extras" content={(ent as any).materiais_extras} withLinks />
+
+      <Separator className="mb-8" />
+
+      {/* Submission form */}
+      {submitted ? (
+        <div className="text-center py-8">
+          <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
+          <p className="text-[15px] font-medium text-foreground mb-1">Conteúdo enviado com sucesso!</p>
+          <p className="text-[13px] text-muted-foreground mb-6">Você pode enviar novamente se precisar.</p>
+          <Button variant="outline" className="rounded-xl" onClick={() => { setSubmitted(false); setLink(""); setFile(null); setObservations(""); }}>Enviar outro conteúdo</Button>
+        </div>
+      ) : (
+        <section className="mb-10">
+          <p className="font-sans text-[15px] tracking-[0.18em] uppercase text-muted-foreground mb-6 font-medium">Enviar conteúdo</p>
+
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="link">Link do conteúdo</Label>
+              <Input
+                id="link"
+                type="url"
+                placeholder="https://..."
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Arquivo</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-3 border border-input rounded-xl px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors"
+              >
+                <Upload className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {file ? file.name : "Selecionar arquivo"}
+                </span>
+              </div>
+              {file && (
+                <button onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="text-xs text-muted-foreground underline">
+                  Remover arquivo
+                </button>
+              )}
+            </div>
+
+            <p className="text-[12px] text-muted-foreground">Preencha pelo menos o link ou o arquivo.</p>
+
+            <div className="space-y-2">
+              <Label htmlFor="observations">Observações (opcional)</Label>
+              <Textarea
+                id="observations"
+                placeholder="Alguma observação sobre o conteúdo..."
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                className="rounded-xl"
+                rows={3}
+              />
+            </div>
+
+            <Button
+              className="w-full rounded-xl"
+              disabled={(!link && !file) || submission.isPending}
+              onClick={() => {
+                submission.mutate(
+                  { entrepreneurId, userEmail, link: link || undefined, file: file || undefined, observations: observations || undefined },
+                  {
+                    onSuccess: () => {
+                      setSubmitted(true);
+                      toast({ title: "Conteúdo enviado!", description: "Seu conteúdo foi registrado com sucesso." });
+                    },
+                    onError: () => {
+                      toast({ title: "Erro ao enviar", description: "Tente novamente em alguns instantes.", variant: "destructive" });
+                    },
+                  }
+                );
+              }}
+            >
+              {submission.isPending ? "Enviando..." : "Enviar conteúdo"}
+            </Button>
+          </div>
+        </section>
+      )}
 
       <Separator className="mb-8" />
 
