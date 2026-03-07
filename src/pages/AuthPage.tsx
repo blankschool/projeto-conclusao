@@ -52,7 +52,7 @@ export default function AuthPage({ onAuth }: AuthPageProps) {
           .eq("user_email", inputEmail)
           .maybeSingle();
 
-        setTimeout(() => onAuth(email, existing?.entrepreneur_id ?? undefined), 1500);
+        setTimeout(() => onAuth(inputEmail, existing?.entrepreneur_id ?? undefined), 1500);
       } else {
         setStatus("error");
         setErrorMsg("E-mail não encontrado na base de alunos.");

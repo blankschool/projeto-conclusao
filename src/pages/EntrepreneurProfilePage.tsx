@@ -121,10 +121,10 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
 
 
       <ProfileSection label="História" content={ent.bio} />
-      <ProfileSection label="Posicionamento" content={(ent as any).posicionamento} />
-      <ProfileSection label="Tom de voz" content={(ent as any).tom_de_voz} />
-      <ProfileSection label="Editorias" content={(ent as any).editorias} />
-      <ProfileSection label="Materiais extras" content={(ent as any).materiais_extras} withLinks />
+      <ProfileSection label="Posicionamento" content={ent.posicionamento} />
+      <ProfileSection label="Tom de voz" content={ent.tom_de_voz} />
+      <ProfileSection label="Editorias" content={ent.editorias} />
+      <ProfileSection label="Materiais extras" content={ent.materiais_extras} withLinks />
 
       <Separator className="mb-8" />
 
@@ -201,7 +201,8 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
                       setSubmitted(true);
                       toast({ title: "Conteúdo enviado!", description: "Seu conteúdo foi registrado com sucesso." });
                     },
-                    onError: () => {
+                    onError: (err) => {
+                      console.error("Submission error:", err);
                       toast({ title: "Erro ao enviar", description: "Tente novamente em alguns instantes.", variant: "destructive" });
                     },
                   }
