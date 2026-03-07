@@ -104,38 +104,38 @@ export default function SelectionPage({ userEmail, onBack, onConfirmed }: Select
       </div>
 
       <Dialog open={popup !== null && step !== "confirmed"} onOpenChange={(open) => { if (!open) handleClosePopup(); }}>
-        <DialogContent className="rounded-2xl max-w-md">
+        <DialogContent className="rounded-2xl max-w-md p-4 sm:p-6">
           {selectedEnt && step === "info" && (
             <>
               <DialogHeader>
                 {(() => {
                   const photo = getPhotoByName(selectedEnt.name);
                   return photo ? (
-                    <img src={photo} alt={selectedEnt.name} className="w-14 h-14 rounded-2xl object-cover mb-4" />
+                    <img src={photo} alt={selectedEnt.name} className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl object-cover mb-3 sm:mb-4" />
                   ) : (
-                    <div className="w-14 h-14 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-base font-bold text-foreground mb-4">{selectedEnt.avatar}</div>
+                    <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl border border-border bg-foreground/5 flex items-center justify-center font-sans text-sm sm:text-base font-bold text-foreground mb-3 sm:mb-4">{selectedEnt.avatar}</div>
                   );
                 })()}
-                <DialogTitle className="text-[22px] font-normal tracking-tight">{selectedEnt.name}</DialogTitle>
+                <DialogTitle className="text-lg sm:text-[22px] font-normal tracking-tight">{selectedEnt.name}</DialogTitle>
                 <div className="text-sm text-foreground font-medium">{selectedEnt.company}</div>
                 <Badge variant="outline" className="w-fit mt-1">{selectedEnt.segment}</Badge>
               </DialogHeader>
-              <p className="text-sm text-muted-foreground leading-relaxed mt-2">{selectedEnt.bio}</p>
-              <div className="grid grid-cols-2 gap-3 mt-4 p-4 rounded-xl bg-muted/50 border border-border">
+              <p className="text-sm text-muted-foreground leading-relaxed mt-1 sm:mt-2">{selectedEnt.bio}</p>
+              <div className="grid grid-cols-2 gap-3 mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-muted/50 border border-border">
                 <div>
                   <div className="font-sans text-[10px] tracking-wider uppercase text-muted-foreground mb-1">Vagas totais</div>
-                  <div className="text-xl font-serif text-foreground">{selectedEnt.slots}</div>
+                  <div className="text-lg sm:text-xl font-serif text-foreground">{selectedEnt.slots}</div>
                 </div>
                 <div>
                   <div className="font-sans text-[10px] tracking-wider uppercase text-muted-foreground mb-1">Disponíveis</div>
-                  <div className="text-xl font-serif text-foreground">{selectedEnt.slots - selectedEnt.taken}</div>
+                  <div className="text-lg sm:text-xl font-serif text-foreground">{selectedEnt.slots - selectedEnt.taken}</div>
                 </div>
               </div>
-              <div className="flex gap-2.5 mt-4">
+              <div className="flex gap-2.5 mt-3 sm:mt-4">
                 <Button onClick={handleClosePopup} variant="outline" className="flex-1 rounded-xl">Voltar</Button>
                 <Button onClick={handlePreConfirm} className="flex-[2] rounded-xl">Quero me inscrever</Button>
               </div>
-              <p className="text-[11px] text-muted-foreground text-center mt-3">Você ainda poderá revisar antes de confirmar.</p>
+              <p className="text-[11px] text-muted-foreground text-center mt-2 sm:mt-3">Você ainda poderá revisar antes de confirmar.</p>
             </>
           )}
 
