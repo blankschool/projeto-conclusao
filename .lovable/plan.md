@@ -1,25 +1,13 @@
 
 
-# Fix: Content Submission Issues
+# Atualizar link do Dossiê do Tallis Gomes
 
-## What's wrong
-The code has type-casting issues and an email normalization bug that can cause submission failures or silent errors.
+## O que mudar
+Atualizar o campo `materiais_extras` do Tallis Gomes (id=11) na tabela `entrepreneurs`, substituindo o link atual do dossiê:
 
-## Changes
+- **De:** `https://www.notion.so/blankschool/Dossi-Completo-Tallis-Gomes-21fd77361cee80f5a7f4e9f88a52d1b0`
+- **Para:** `https://blankschool.notion.site/Dossi-Completo-Tallis-Gomes-21fd77361cee80f5a7f4e9f88a52d1b0?source=copy_link`
 
-### 1. `src/hooks/useCreateSubmission.ts`
-- Remove `as any` cast: change `.from("submissions" as any)` to `.from("submissions")` -- the table exists in types
-- Add `console.error` logging in the mutation for debugging
-
-### 2. `src/pages/EntrepreneurProfilePage.tsx`
-- Remove all `(ent as any).` casts for `posicionamento`, `tom_de_voz`, `editorias`, `materiais_extras` -- these fields exist in the typed schema
-- Add error logging in the `onError` callback
-
-### 3. `src/pages/AuthPage.tsx`
-- Line 55: Change `onAuth(email, ...)` to `onAuth(inputEmail, ...)` so the normalized (lowercased/trimmed) email is passed through the app, ensuring consistent matching in submissions, selections, and confidentiality queries
-
-## Verification
-- RLS policies confirmed: public INSERT and SELECT on `submissions` table ✓
-- Storage bucket `submissions` is public ✓
-- All fields exist in the generated types ✓
+## Como
+Uma migration SQL com `UPDATE` no registro `id = 11`, fazendo `REPLACE` no texto do campo `materiais_extras` para trocar apenas a URL do dossiê, mantendo todo o restante do conteúdo intacto.
 

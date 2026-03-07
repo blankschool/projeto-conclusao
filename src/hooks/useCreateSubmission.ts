@@ -32,7 +32,7 @@ export function useCreateSubmission() {
         file_name = data.file.name;
       }
 
-      const { error } = await supabase.from("submissions" as any).insert({
+      const { error } = await supabase.from("submissions").insert({
         entrepreneur_id: data.entrepreneurId,
         user_email: data.userEmail,
         link: data.link || null,
@@ -41,7 +41,10 @@ export function useCreateSubmission() {
         observations: data.observations || null,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Submission insert error:", error);
+        throw error;
+      }
     },
   });
 }
