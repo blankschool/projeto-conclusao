@@ -17,7 +17,11 @@ export function useCreateSubmission() {
 
       if (data.file) {
         const timestamp = Date.now();
-        const path = `${data.entrepreneurId}/${timestamp}_${data.file.name}`;
+        const safeName = data.file.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${data.entrepreneurId}/${timestamp}_${safeName}`;
         const { error: uploadError } = await supabase.storage
           .from("submissions")
           .upload(path, data.file);
