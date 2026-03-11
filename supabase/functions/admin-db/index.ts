@@ -12,6 +12,7 @@ const ALLOWED_TABLES = [
   "flow_steps",
   "rules",
   "selections",
+  "submissions",
 ] as const;
 
 type AllowedTable = (typeof ALLOWED_TABLES)[number];
