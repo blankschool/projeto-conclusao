@@ -21,6 +21,7 @@ const TABLE_COLUMNS: Record<string, string[]> = {
   flow_steps: ["step_number", "title", "description", "sort_order"],
   rules: ["text", "sort_order"],
   selections: ["user_email", "entrepreneur_id", "created_at"],
+  submissions: ["user_email", "entrepreneur_id", "link", "file_url", "file_name", "observations", "created_at"],
 };
 
 const TABLES = Object.keys(TABLE_COLUMNS);
