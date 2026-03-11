@@ -1,27 +1,13 @@
 
 
-# Add Submissions tab to Admin page
+# Atualizar link do Dossiê do Tallis Gomes
 
-## Problem
-The admin panel doesn't show the `submissions` table, so there's no way to see student content submissions or access their uploaded files/links.
+## O que mudar
+Atualizar o campo `materiais_extras` do Tallis Gomes (id=11) na tabela `entrepreneurs`, substituindo o link atual do dossiê:
 
-## Changes
+- **De:** `https://www.notion.so/blankschool/Dossi-Completo-Tallis-Gomes-21fd77361cee80f5a7f4e9f88a52d1b0`
+- **Para:** `https://blankschool.notion.site/Dossi-Completo-Tallis-Gomes-21fd77361cee80f5a7f4e9f88a52d1b0?source=copy_link`
 
-### `src/pages/AdminPage.tsx`
-
-1. Add `submissions` to `TABLE_COLUMNS` with columns: `user_email`, `entrepreneur_id`, `link`, `file_url`, `file_name`, `observations`, `created_at`
-
-2. Create a dedicated `AdminSubmissions` component that:
-   - Fetches submissions via `useAdminList("submissions", password)`
-   - Fetches entrepreneurs to map `entrepreneur_id` → entrepreneur name
-   - Displays a table with: email, entrepreneur name, link (clickable), file (clickable download link using `file_url`), observations, date
-   - Links open in new tabs (`target="_blank"`)
-
-3. Add a "Submissões" tab in the `Tabs` component (before or after the generic table tabs)
-
-### `supabase/functions/admin-db/index.ts`
-- Already includes `submissions` in `ALLOWED_TABLES` — no changes needed
-
-## Summary
-One new dedicated tab showing all submissions with clickable links and file URLs, plus entrepreneur name resolution. No database or edge function changes required.
+## Como
+Uma migration SQL com `UPDATE` no registro `id = 11`, fazendo `REPLACE` no texto do campo `materiais_extras` para trocar apenas a URL do dossiê, mantendo todo o restante do conteúdo intacto.
 

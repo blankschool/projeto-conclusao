@@ -21,6 +21,7 @@ const TABLE_COLUMNS: Record<string, string[]> = {
   flow_steps: ["step_number", "title", "description", "sort_order"],
   rules: ["text", "sort_order"],
   selections: ["user_email", "entrepreneur_id", "created_at"],
+  submissions: ["user_email", "entrepreneur_id", "link", "file_url", "file_name", "observations", "created_at"],
 };
 
 const TABLES = Object.keys(TABLE_COLUMNS);
@@ -284,6 +285,63 @@ function AdminProfiles({ password }: { password: string }) {
   );
 }
 
+function AdminSubmissions({ password }: { password: string }) {
+  const { data: submissions, isLoading } = useAdminList("submissions", password);
+  const { data: entrepreneurs } = useAdminList("entrepreneurs", password);
+
+  if (isLoading) return <p className="p-4 text-muted-foreground">Carregando...</p>;
+
+  const entMap = new Map<number, string>();
+  ((entrepreneurs as Record<string, unknown>[]) || []).forEach((e) => {
+    entMap.set(e.id as number, String(e.name));
+  });
+
+  const rows = (submissions as Record<string, unknown>[]) || [];
+
+  return (
+    <div className="overflow-auto border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Aluno</TableHead>
+            <TableHead>Empresário</TableHead>
+            <TableHead>Link</TableHead>
+            <TableHead>Arquivo</TableHead>
+            <TableHead>Observações</TableHead>
+            <TableHead>Data</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id as number}>
+              <TableCell>{String(row.user_email ?? "")}</TableCell>
+              <TableCell>{entMap.get(row.entrepreneur_id as number) ?? String(row.entrepreneur_id)}</TableCell>
+              <TableCell>
+                {row.link ? (
+                  <a href={String(row.link)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
+                    {String(row.link)}
+                  </a>
+                ) : "-"}
+              </TableCell>
+              <TableCell>
+                {row.file_url ? (
+                  <a href={String(row.file_url)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
+                    {String(row.file_name || "Download")}
+                  </a>
+                ) : "-"}
+              </TableCell>
+              <TableCell>
+                <span className="max-w-[200px] truncate block">{String(row.observations ?? "-")}</span>
+              </TableCell>
+              <TableCell>{row.created_at ? new Date(String(row.created_at)).toLocaleDateString("pt-BR") : "-"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { isAuthenticated, password, verify, logout, isVerifying, error } = useAdminAuth();
 
@@ -302,6 +360,7 @@ export default function AdminPage() {
       <Tabs defaultValue="profiles">
         <TabsList className="flex-wrap">
           <TabsTrigger value="profiles">Perfis</TabsTrigger>
+          <TabsTrigger value="submissoes">Submissões</TabsTrigger>
           {TABLES.map((t) => (
             <TabsTrigger key={t} value={t} className="capitalize">
               {t.replace("_", " ")}
@@ -310,6 +369,9 @@ export default function AdminPage() {
         </TabsList>
         <TabsContent value="profiles">
           <AdminProfiles password={password!} />
+        </TabsContent>
+        <TabsContent value="submissoes">
+          <AdminSubmissions password={password!} />
         </TabsContent>
         {TABLES.map((t) => (
           <TabsContent key={t} value={t}>
