@@ -360,6 +360,7 @@ export default function AdminPage() {
       <Tabs defaultValue="profiles">
         <TabsList className="flex-wrap">
           <TabsTrigger value="profiles">Perfis</TabsTrigger>
+          <TabsTrigger value="submissoes">Submissões</TabsTrigger>
           {TABLES.map((t) => (
             <TabsTrigger key={t} value={t} className="capitalize">
               {t.replace("_", " ")}
@@ -368,6 +369,9 @@ export default function AdminPage() {
         </TabsList>
         <TabsContent value="profiles">
           <AdminProfiles password={password!} />
+        </TabsContent>
+        <TabsContent value="submissoes">
+          <AdminSubmissions password={password!} />
         </TabsContent>
         {TABLES.map((t) => (
           <TabsContent key={t} value={t}>
