@@ -20,7 +20,8 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft, MessageSquare } from "lucide-react";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft, MessageSquare, ExternalLink, FileText, Image } from "lucide-react";
 import { toast } from "sonner";
 
 const TABLE_COLUMNS: Record<string, string[]> = {
