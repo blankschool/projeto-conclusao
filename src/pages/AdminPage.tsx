@@ -330,6 +330,18 @@ function AdminSubmissions({ password }: { password: string }) {
 
   const saveFeedback = async () => {
     if (!feedbackRow) return;
+    if (feedbackStatus === "selecionado") {
+      const alreadySelected = rows.find(
+        (r) =>
+          r.entrepreneur_id === feedbackRow.entrepreneur_id &&
+          r.id !== feedbackRow.id &&
+          r.status === "selecionado"
+      );
+      if (alreadySelected) {
+        toast.error("Já existe um conteúdo selecionado para este empresário.");
+        return;
+      }
+    }
     setSaving(true);
     try {
       await update.mutateAsync({
