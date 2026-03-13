@@ -295,9 +295,8 @@ function AdminProfiles({ password }: { password: string }) {
 
 const STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente", variant: "secondary" as const },
-  { value: "aprovado", label: "Aprovado", variant: "default" as const },
-  { value: "revisao", label: "Revisão necessária", variant: "outline" as const },
-  { value: "reprovado", label: "Reprovado", variant: "destructive" as const },
+  { value: "revisado", label: "Revisado", variant: "outline" as const },
+  { value: "selecionado", label: "Selecionado", variant: "default" as const },
 ];
 
 function getStatusBadge(status: string | null) {
@@ -331,6 +330,18 @@ function AdminSubmissions({ password }: { password: string }) {
 
   const saveFeedback = async () => {
     if (!feedbackRow) return;
+    if (feedbackStatus === "selecionado") {
+      const alreadySelected = rows.find(
+        (r) =>
+          r.entrepreneur_id === feedbackRow.entrepreneur_id &&
+          r.id !== feedbackRow.id &&
+          r.status === "selecionado"
+      );
+      if (alreadySelected) {
+        toast.error("Já existe um conteúdo selecionado para este empresário.");
+        return;
+      }
+    }
     setSaving(true);
     try {
       await update.mutateAsync({
@@ -426,6 +437,9 @@ function AdminSubmissions({ password }: { password: string }) {
                     ))}
                   </SelectContent>
                 </Select>
+                {feedbackStatus === "selecionado" && (
+                  <p className="text-xs text-muted-foreground">⚠️ Apenas 1 conteúdo pode ser selecionado por empresário.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Feedback</Label>

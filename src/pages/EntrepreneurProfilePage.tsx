@@ -136,22 +136,18 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
           <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
           <p className="text-[15px] font-medium text-foreground mb-1">Conteúdo enviado com sucesso!</p>
           <p className="text-[13px] text-muted-foreground mb-4">
-            {existingSubmission?.status === "aprovado"
-              ? "Seu conteúdo foi aprovado!"
-              : existingSubmission?.status === "revisao"
-              ? "Revisão necessária — veja o feedback abaixo."
-              : existingSubmission?.status === "reprovado"
-              ? "Seu conteúdo foi reprovado — veja o feedback abaixo."
+           {existingSubmission?.status === "selecionado"
+              ? "Seu conteúdo foi selecionado! 🎉"
+              : existingSubmission?.status === "revisado"
+              ? "Seu conteúdo foi revisado — veja o feedback abaixo."
               : "Seu conteúdo foi registrado e está em análise."}
           </p>
           {existingSubmission?.status && existingSubmission.status !== "pendente" && (
             <Badge variant={
-              existingSubmission.status === "aprovado" ? "default" :
-              existingSubmission.status === "reprovado" ? "destructive" : "outline"
+              existingSubmission.status === "selecionado" ? "default" : "outline"
             } className="mb-4">
-              {existingSubmission.status === "aprovado" ? "Aprovado" :
-               existingSubmission.status === "revisao" ? "Revisão necessária" :
-               existingSubmission.status === "reprovado" ? "Reprovado" : existingSubmission.status}
+              {existingSubmission.status === "selecionado" ? "Selecionado" :
+               existingSubmission.status === "revisado" ? "Revisado" : existingSubmission.status}
             </Badge>
           )}
           {existingSubmission?.feedback && (
