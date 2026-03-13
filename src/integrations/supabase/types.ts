@@ -185,31 +185,37 @@ export type Database = {
         Row: {
           created_at: string | null
           entrepreneur_id: number
+          feedback: string | null
           file_name: string | null
           file_url: string | null
           id: number
           link: string | null
           observations: string | null
+          status: string | null
           user_email: string
         }
         Insert: {
           created_at?: string | null
           entrepreneur_id: number
+          feedback?: string | null
           file_name?: string | null
           file_url?: string | null
           id?: number
           link?: string | null
           observations?: string | null
+          status?: string | null
           user_email: string
         }
         Update: {
           created_at?: string | null
           entrepreneur_id?: number
+          feedback?: string | null
           file_name?: string | null
           file_url?: string | null
           id?: number
           link?: string | null
           observations?: string | null
+          status?: string | null
           user_email?: string
         }
         Relationships: [
