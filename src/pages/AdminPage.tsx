@@ -437,6 +437,9 @@ function AdminSubmissions({ password }: { password: string }) {
                     ))}
                   </SelectContent>
                 </Select>
+                {feedbackStatus === "selecionado" && (
+                  <p className="text-xs text-muted-foreground">⚠️ Apenas 1 conteúdo pode ser selecionado por empresário.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Feedback</Label>
