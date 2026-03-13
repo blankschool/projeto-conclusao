@@ -295,9 +295,8 @@ function AdminProfiles({ password }: { password: string }) {
 
 const STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente", variant: "secondary" as const },
-  { value: "aprovado", label: "Aprovado", variant: "default" as const },
-  { value: "revisao", label: "Revisão necessária", variant: "outline" as const },
-  { value: "reprovado", label: "Reprovado", variant: "destructive" as const },
+  { value: "revisado", label: "Revisado", variant: "outline" as const },
+  { value: "selecionado", label: "Selecionado", variant: "default" as const },
 ];
 
 function getStatusBadge(status: string | null) {
