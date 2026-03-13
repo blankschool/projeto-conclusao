@@ -14,13 +14,12 @@ import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft, MessageSquare } from "lucide-react";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft, MessageSquare, ExternalLink, FileText, Image } from "lucide-react";
 import { toast } from "sonner";
 
 const TABLE_COLUMNS: Record<string, string[]> = {
@@ -304,11 +303,68 @@ function getStatusBadge(status: string | null) {
   return <Badge variant={opt?.variant ?? "secondary"}>{opt?.label ?? "Pendente"}</Badge>;
 }
 
+function getFileType(fileName: string | null): "pdf" | "image" | "other" {
+  if (!fileName) return "other";
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return "pdf";
+  if (["jpg", "jpeg", "png", "webp", "gif", "svg"].includes(ext || "")) return "image";
+  return "other";
+}
+
+function ContentPreview({ row }: { row: Record<string, unknown> }) {
+  const link = row.link ? String(row.link) : null;
+  const fileUrl = row.file_url ? String(row.file_url) : null;
+  const fileName = row.file_name ? String(row.file_name) : null;
+  const fileType = getFileType(fileName);
+
+  const openUrl = link || fileUrl;
+
+  return (
+    <div className="flex flex-col h-full">
+      {openUrl && (
+        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
+          <a href={openUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline flex items-center gap-1 truncate">
+            <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" /> Abrir em nova aba
+          </a>
+        </div>
+      )}
+      <div className="flex-1 min-h-0">
+        {link && (
+          <iframe src={link} className="w-full h-full border-0" title="Content preview" sandbox="allow-scripts allow-same-origin" />
+        )}
+        {!link && fileUrl && fileType === "pdf" && (
+          <iframe src={fileUrl} className="w-full h-full border-0" title="PDF preview" />
+        )}
+        {!link && fileUrl && fileType === "image" && (
+          <div className="w-full h-full flex items-center justify-center p-4 overflow-auto bg-muted/20">
+            <img src={fileUrl} alt={fileName || "Preview"} className="max-w-full max-h-full object-contain rounded-md" />
+          </div>
+        )}
+        {!link && fileUrl && fileType === "other" && (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-muted-foreground">
+            <FileText className="h-12 w-12" />
+            <p className="text-sm">Pré-visualização não disponível</p>
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline flex items-center gap-1">
+              <ExternalLink className="h-3.5 w-3.5" /> Baixar arquivo
+            </a>
+          </div>
+        )}
+        {!link && !fileUrl && (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <FileText className="h-12 w-12" />
+            <p className="text-sm">Nenhum conteúdo anexado</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AdminSubmissions({ password }: { password: string }) {
   const { data: submissions, isLoading } = useAdminList("submissions", password);
   const { data: entrepreneurs } = useAdminList("entrepreneurs", password);
   const { update } = useAdminMutation("submissions", password);
-  const [feedbackRow, setFeedbackRow] = useState<Record<string, unknown> | null>(null);
+  const [reviewRow, setReviewRow] = useState<Record<string, unknown> | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("pendente");
   const [saving, setSaving] = useState(false);
@@ -322,19 +378,19 @@ function AdminSubmissions({ password }: { password: string }) {
 
   const rows = (submissions as Record<string, unknown>[]) || [];
 
-  const openFeedback = (row: Record<string, unknown>) => {
-    setFeedbackRow(row);
+  const openReview = (row: Record<string, unknown>) => {
+    setReviewRow(row);
     setFeedbackText(String(row.feedback ?? ""));
     setFeedbackStatus(String(row.status ?? "pendente"));
   };
 
   const saveFeedback = async () => {
-    if (!feedbackRow) return;
+    if (!reviewRow) return;
     if (feedbackStatus === "selecionado") {
       const alreadySelected = rows.find(
         (r) =>
-          r.entrepreneur_id === feedbackRow.entrepreneur_id &&
-          r.id !== feedbackRow.id &&
+          r.entrepreneur_id === reviewRow.entrepreneur_id &&
+          r.id !== reviewRow.id &&
           r.status === "selecionado"
       );
       if (alreadySelected) {
@@ -345,11 +401,11 @@ function AdminSubmissions({ password }: { password: string }) {
     setSaving(true);
     try {
       await update.mutateAsync({
-        id: feedbackRow.id as number,
+        id: reviewRow.id as number,
         data: { feedback: feedbackText || null, status: feedbackStatus },
       });
       toast.success("Feedback salvo!");
-      setFeedbackRow(null);
+      setReviewRow(null);
     } catch {
       toast.error("Erro ao salvar feedback");
     } finally {
@@ -357,111 +413,117 @@ function AdminSubmissions({ password }: { password: string }) {
     }
   };
 
-  return (
-    <>
-      <div className="overflow-auto border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Aluno</TableHead>
-              <TableHead>Empresário</TableHead>
-              <TableHead>Link</TableHead>
-              <TableHead>Arquivo</TableHead>
-              <TableHead>Observações</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id as number}>
-                <TableCell>{String(row.user_email ?? "")}</TableCell>
-                <TableCell>{entMap.get(row.entrepreneur_id as number) ?? String(row.entrepreneur_id)}</TableCell>
-                <TableCell>
-                  {row.link ? (
-                    <a href={String(row.link)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
-                      {String(row.link)}
-                    </a>
-                  ) : "-"}
-                </TableCell>
-                <TableCell>
-                  {row.file_url ? (
-                    <a href={String(row.file_url)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
-                      {String(row.file_name || "Download")}
-                    </a>
-                  ) : "-"}
-                </TableCell>
-                <TableCell>
-                  <span className="max-w-[200px] truncate block">{String(row.observations ?? "-")}</span>
-                </TableCell>
-                <TableCell>{getStatusBadge(row.status as string | null)}</TableCell>
-                <TableCell>{row.created_at ? new Date(String(row.created_at)).toLocaleDateString("pt-BR") : "-"}</TableCell>
-                <TableCell>
-                  <Button size="sm" variant="outline" onClick={() => openFeedback(row)}>
-                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+  // Review split-view mode
+  if (reviewRow) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setReviewRow(null)}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Voltar à lista
+        </button>
+        <div className="border rounded-lg overflow-hidden" style={{ height: "calc(100vh - 220px)" }}>
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSize={60} minSize={30}>
+              <ContentPreview row={reviewRow} />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40} minSize={25}>
+              <div className="h-full overflow-auto p-5 space-y-5">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3">Detalhes da Submissão</h3>
+                  <div className="text-sm space-y-2 text-muted-foreground">
+                    <p><span className="font-medium text-foreground">Aluno:</span> {String(reviewRow.user_email)}</p>
+                    <p><span className="font-medium text-foreground">Empresário:</span> {entMap.get(reviewRow.entrepreneur_id as number) ?? String(reviewRow.entrepreneur_id)}</p>
+                    {reviewRow.observations && (
+                      <div>
+                        <span className="font-medium text-foreground">Observações:</span>
+                        <p className="mt-1 text-foreground/80 whitespace-pre-wrap">{String(reviewRow.observations)}</p>
+                      </div>
+                    )}
+                    <p><span className="font-medium text-foreground">Data:</span> {reviewRow.created_at ? new Date(String(reviewRow.created_at)).toLocaleDateString("pt-BR") : "-"}</p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={feedbackStatus} onValueChange={setFeedbackStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {feedbackStatus === "selecionado" && (
+                    <p className="text-xs text-muted-foreground">⚠️ Apenas 1 conteúdo pode ser selecionado por empresário.</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Feedback</Label>
+                  <Textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Escreva o feedback para o aluno..."
+                    rows={8}
+                    className="rounded-xl"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setReviewRow(null)} className="flex-1">Cancelar</Button>
+                  <Button onClick={saveFeedback} disabled={saving} className="flex-1">
+                    {saving ? "Salvando..." : "Salvar Feedback"}
                   </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
       </div>
+    );
+  }
 
-      <Dialog open={!!feedbackRow} onOpenChange={(open) => !open && setFeedbackRow(null)}>
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle>Feedback da Submissão</DialogTitle>
-          </DialogHeader>
-          {feedbackRow && (
-            <div className="space-y-4">
-              <div className="text-sm space-y-1 text-muted-foreground">
-                <p><span className="font-medium text-foreground">Aluno:</span> {String(feedbackRow.user_email)}</p>
-                <p><span className="font-medium text-foreground">Empresário:</span> {entMap.get(feedbackRow.entrepreneur_id as number) ?? String(feedbackRow.entrepreneur_id)}</p>
-                {feedbackRow.link && (
-                  <p><span className="font-medium text-foreground">Link:</span>{" "}
-                    <a href={String(feedbackRow.link)} target="_blank" rel="noopener noreferrer" className="text-primary underline">{String(feedbackRow.link)}</a>
-                  </p>
-                )}
-              </div>
-              <Separator />
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={feedbackStatus} onValueChange={setFeedbackStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {feedbackStatus === "selecionado" && (
-                  <p className="text-xs text-muted-foreground">⚠️ Apenas 1 conteúdo pode ser selecionado por empresário.</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Feedback</Label>
-                <Textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Escreva o feedback para o aluno..."
-                  rows={6}
-                  className="rounded-xl"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFeedbackRow(null)}>Cancelar</Button>
-            <Button onClick={saveFeedback} disabled={saving}>
-              {saving ? "Salvando..." : "Salvar Feedback"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+  // Table list mode
+  return (
+    <div className="overflow-auto border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Aluno</TableHead>
+            <TableHead>Empresário</TableHead>
+            <TableHead>Conteúdo</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Data</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id as number}>
+              <TableCell>{String(row.user_email ?? "")}</TableCell>
+              <TableCell>{entMap.get(row.entrepreneur_id as number) ?? String(row.entrepreneur_id)}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {row.link && <Badge variant="outline" className="text-xs">Link</Badge>}
+                  {row.file_url && <Badge variant="outline" className="text-xs">Arquivo</Badge>}
+                  {!row.link && !row.file_url && <span className="text-muted-foreground text-xs">-</span>}
+                </div>
+              </TableCell>
+              <TableCell>{getStatusBadge(row.status as string | null)}</TableCell>
+              <TableCell>{row.created_at ? new Date(String(row.created_at)).toLocaleDateString("pt-BR") : "-"}</TableCell>
+              <TableCell>
+                <Button size="sm" variant="outline" onClick={() => openReview(row)}>
+                  <MessageSquare className="h-4 w-4 mr-1" /> Revisar
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
