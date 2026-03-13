@@ -59,7 +59,7 @@ export function ProfileSection({ label, content, withLinks = false }: { label: s
 export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onBack }: EntrepreneurProfilePageProps) {
   const { data: entrepreneurs, isLoading: loadingEnt } = useEntrepreneurs();
   const submission = useCreateSubmission();
-  const { data: alreadySubmitted } = useExistingSubmission(entrepreneurId, userEmail);
+  const { data: existingSubmission } = useExistingSubmission(entrepreneurId, userEmail);
   const { hasAccepted, isLoading: loadingAgreement, accept, isAccepting } = useConfidentialityAgreement(userEmail);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +68,8 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
   const [observations, setObservations] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const ent = entrepreneurs?.find((e) => e.id === entrepreneurId);
+
+  const alreadySubmitted = !!existingSubmission;
 
   useEffect(() => {
     if (alreadySubmitted) setSubmitted(true);
