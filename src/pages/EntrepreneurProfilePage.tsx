@@ -135,7 +135,31 @@ export default function EntrepreneurProfilePage({ entrepreneurId, userEmail, onB
         <div className="text-center py-8">
           <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
           <p className="text-[15px] font-medium text-foreground mb-1">Conteúdo enviado com sucesso!</p>
-          <p className="text-[13px] text-muted-foreground">Seu conteúdo foi registrado e está em análise.</p>
+          <p className="text-[13px] text-muted-foreground mb-4">
+            {existingSubmission?.status === "aprovado"
+              ? "Seu conteúdo foi aprovado!"
+              : existingSubmission?.status === "revisao"
+              ? "Revisão necessária — veja o feedback abaixo."
+              : existingSubmission?.status === "reprovado"
+              ? "Seu conteúdo foi reprovado — veja o feedback abaixo."
+              : "Seu conteúdo foi registrado e está em análise."}
+          </p>
+          {existingSubmission?.status && existingSubmission.status !== "pendente" && (
+            <Badge variant={
+              existingSubmission.status === "aprovado" ? "default" :
+              existingSubmission.status === "reprovado" ? "destructive" : "outline"
+            } className="mb-4">
+              {existingSubmission.status === "aprovado" ? "Aprovado" :
+               existingSubmission.status === "revisao" ? "Revisão necessária" :
+               existingSubmission.status === "reprovado" ? "Reprovado" : existingSubmission.status}
+            </Badge>
+          )}
+          {existingSubmission?.feedback && (
+            <div className="mt-4 text-left bg-muted/50 rounded-xl p-4 border border-border">
+              <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Feedback</p>
+              <p className="text-[14px] text-foreground/80 whitespace-pre-line">{existingSubmission.feedback}</p>
+            </div>
+          )}
         </div>
       ) : (
         <section className="mb-10">
