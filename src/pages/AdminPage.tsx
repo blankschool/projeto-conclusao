@@ -5,14 +5,22 @@ import { ProfileSection, renderTextWithLinks } from "@/pages/EntrepreneurProfile
 import { getPhotoByName } from "@/lib/entrepreneurPhotos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft } from "lucide-react";
+import { Pencil, Trash2, Plus, Save, X, LogOut, ArrowLeft, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 const TABLE_COLUMNS: Record<string, string[]> = {
@@ -285,9 +293,26 @@ function AdminProfiles({ password }: { password: string }) {
   );
 }
 
+const STATUS_OPTIONS = [
+  { value: "pendente", label: "Pendente", variant: "secondary" as const },
+  { value: "aprovado", label: "Aprovado", variant: "default" as const },
+  { value: "revisao", label: "Revisão necessária", variant: "outline" as const },
+  { value: "reprovado", label: "Reprovado", variant: "destructive" as const },
+];
+
+function getStatusBadge(status: string | null) {
+  const opt = STATUS_OPTIONS.find((o) => o.value === (status || "pendente"));
+  return <Badge variant={opt?.variant ?? "secondary"}>{opt?.label ?? "Pendente"}</Badge>;
+}
+
 function AdminSubmissions({ password }: { password: string }) {
   const { data: submissions, isLoading } = useAdminList("submissions", password);
   const { data: entrepreneurs } = useAdminList("entrepreneurs", password);
+  const { update } = useAdminMutation("submissions", password);
+  const [feedbackRow, setFeedbackRow] = useState<Record<string, unknown> | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState("pendente");
+  const [saving, setSaving] = useState(false);
 
   if (isLoading) return <p className="p-4 text-muted-foreground">Carregando...</p>;
 
@@ -298,47 +323,131 @@ function AdminSubmissions({ password }: { password: string }) {
 
   const rows = (submissions as Record<string, unknown>[]) || [];
 
+  const openFeedback = (row: Record<string, unknown>) => {
+    setFeedbackRow(row);
+    setFeedbackText(String(row.feedback ?? ""));
+    setFeedbackStatus(String(row.status ?? "pendente"));
+  };
+
+  const saveFeedback = async () => {
+    if (!feedbackRow) return;
+    setSaving(true);
+    try {
+      await update.mutateAsync({
+        id: feedbackRow.id as number,
+        data: { feedback: feedbackText || null, status: feedbackStatus },
+      });
+      toast.success("Feedback salvo!");
+      setFeedbackRow(null);
+    } catch {
+      toast.error("Erro ao salvar feedback");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div className="overflow-auto border rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Aluno</TableHead>
-            <TableHead>Empresário</TableHead>
-            <TableHead>Link</TableHead>
-            <TableHead>Arquivo</TableHead>
-            <TableHead>Observações</TableHead>
-            <TableHead>Data</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id as number}>
-              <TableCell>{String(row.user_email ?? "")}</TableCell>
-              <TableCell>{entMap.get(row.entrepreneur_id as number) ?? String(row.entrepreneur_id)}</TableCell>
-              <TableCell>
-                {row.link ? (
-                  <a href={String(row.link)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
-                    {String(row.link)}
-                  </a>
-                ) : "-"}
-              </TableCell>
-              <TableCell>
-                {row.file_url ? (
-                  <a href={String(row.file_url)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
-                    {String(row.file_name || "Download")}
-                  </a>
-                ) : "-"}
-              </TableCell>
-              <TableCell>
-                <span className="max-w-[200px] truncate block">{String(row.observations ?? "-")}</span>
-              </TableCell>
-              <TableCell>{row.created_at ? new Date(String(row.created_at)).toLocaleDateString("pt-BR") : "-"}</TableCell>
+    <>
+      <div className="overflow-auto border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Aluno</TableHead>
+              <TableHead>Empresário</TableHead>
+              <TableHead>Link</TableHead>
+              <TableHead>Arquivo</TableHead>
+              <TableHead>Observações</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow key={row.id as number}>
+                <TableCell>{String(row.user_email ?? "")}</TableCell>
+                <TableCell>{entMap.get(row.entrepreneur_id as number) ?? String(row.entrepreneur_id)}</TableCell>
+                <TableCell>
+                  {row.link ? (
+                    <a href={String(row.link)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
+                      {String(row.link)}
+                    </a>
+                  ) : "-"}
+                </TableCell>
+                <TableCell>
+                  {row.file_url ? (
+                    <a href={String(row.file_url)} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate block max-w-[200px]">
+                      {String(row.file_name || "Download")}
+                    </a>
+                  ) : "-"}
+                </TableCell>
+                <TableCell>
+                  <span className="max-w-[200px] truncate block">{String(row.observations ?? "-")}</span>
+                </TableCell>
+                <TableCell>{getStatusBadge(row.status as string | null)}</TableCell>
+                <TableCell>{row.created_at ? new Date(String(row.created_at)).toLocaleDateString("pt-BR") : "-"}</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="outline" onClick={() => openFeedback(row)}>
+                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={!!feedbackRow} onOpenChange={(open) => !open && setFeedbackRow(null)}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Feedback da Submissão</DialogTitle>
+          </DialogHeader>
+          {feedbackRow && (
+            <div className="space-y-4">
+              <div className="text-sm space-y-1 text-muted-foreground">
+                <p><span className="font-medium text-foreground">Aluno:</span> {String(feedbackRow.user_email)}</p>
+                <p><span className="font-medium text-foreground">Empresário:</span> {entMap.get(feedbackRow.entrepreneur_id as number) ?? String(feedbackRow.entrepreneur_id)}</p>
+                {feedbackRow.link && (
+                  <p><span className="font-medium text-foreground">Link:</span>{" "}
+                    <a href={String(feedbackRow.link)} target="_blank" rel="noopener noreferrer" className="text-primary underline">{String(feedbackRow.link)}</a>
+                  </p>
+                )}
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={feedbackStatus} onValueChange={setFeedbackStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Feedback</Label>
+                <Textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Escreva o feedback para o aluno..."
+                  rows={6}
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeedbackRow(null)}>Cancelar</Button>
+            <Button onClick={saveFeedback} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar Feedback"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
